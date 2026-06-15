@@ -131,6 +131,7 @@ func Setup(deps Deps) *gin.Engine {
 
 	// Tracking
 	protected.GET("/shipments", trackH.List)
+	protected.POST("/shipments", trackH.Create)
 	protected.GET("/shipments/:id", trackH.Get)
 	protected.GET("/shipments/:id/events", trackH.ListEvents)
 	protected.POST("/shipments/:id/sync", trackH.Sync)

@@ -166,6 +166,20 @@ func (r *Repository) ListByCustomer(ctx context.Context, customerID uuid.UUID) (
 	return list, err
 }
 
+func (r *Repository) Create(ctx context.Context, s *Shipment) error {
+	status := "pending"
+	if s.Status != nil {
+		status = *s.Status
+	}
+	s.Status = &status
+	return r.db.QueryRow(ctx, `
+		INSERT INTO shipments (tracking_code, external_id, customer_id, contract_id, status, origin, destination)
+		VALUES ($1,$2,$3,$4,$5,$6,$7)
+		RETURNING id, created_at, updated_at`,
+		s.TrackingCode, s.ExternalID, s.CustomerID, s.ContractID, s.Status, s.Origin, s.Destination,
+	).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt)
+}
+
 func (r *Repository) UpsertFromWebhook(ctx context.Context, payload WebhookPayload) error {
 	s, err := r.GetByTrackingCode(ctx, payload.TrackingCode)
 	now := time.Now()

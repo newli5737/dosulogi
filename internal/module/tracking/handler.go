@@ -24,6 +24,23 @@ func NewHandler(svc *Service, webhookSecret string) *Handler {
 	return &Handler{svc: svc, webhookSecret: webhookSecret}
 }
 
+func (h *Handler) Create(c *gin.Context) {
+	var sh Shipment
+	if err := c.ShouldBindJSON(&sh); err != nil {
+		util.BadRequest(c, err.Error())
+		return
+	}
+	if sh.TrackingCode == "" {
+		util.BadRequest(c, "tracking_code required")
+		return
+	}
+	if err := h.svc.Create(c.Request.Context(), &sh); err != nil {
+		util.InternalError(c, err.Error())
+		return
+	}
+	util.JSON(c, http.StatusCreated, sh)
+}
+
 func (h *Handler) List(c *gin.Context) {
 	page, limit, offset := util.ParsePagination(c)
 	items, total, err := h.svc.List(c.Request.Context(), c.Query("status"), c.Query("customer_id"), limit, offset)

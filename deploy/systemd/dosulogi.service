@@ -4,11 +4,11 @@ After=network.target postgresql.service
 
 [Service]
 Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/var/www/dosulogi
-EnvironmentFile=/var/www/dosulogi/.env
-ExecStart=/var/www/dosulogi/server
+User=root
+Group=root
+WorkingDirectory=/home/dosulogi
+EnvironmentFile=/home/dosulogi/.env
+ExecStart=/home/dosulogi/server
 Restart=always
 RestartSec=5
 

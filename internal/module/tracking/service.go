@@ -17,6 +17,10 @@ func NewService(repo *Repository, client *tracking3p.Client) *Service {
 	return &Service{repo: repo, client: client}
 }
 
+func (s *Service) Create(ctx context.Context, sh *Shipment) error {
+	return s.repo.Create(ctx, sh)
+}
+
 func (s *Service) List(ctx context.Context, status, customerID string, limit, offset int) ([]Shipment, int, error) {
 	return s.repo.List(ctx, status, customerID, limit, offset)
 }
