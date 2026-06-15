@@ -4,6 +4,10 @@ import (
 	crmapp "github.com/dosu-logi/logistics-erp/internal/crm/application"
 	crmhttp "github.com/dosu-logi/logistics-erp/internal/crm/adapter/http"
 	crmrepo "github.com/dosu-logi/logistics-erp/internal/crm/adapter/postgres"
+	salesapp "github.com/dosu-logi/logistics-erp/internal/sales/application"
+	saleshttp "github.com/dosu-logi/logistics-erp/internal/sales/adapter/http"
+	salesmailer "github.com/dosu-logi/logistics-erp/internal/sales/adapter/mailer"
+	salesrepo "github.com/dosu-logi/logistics-erp/internal/sales/adapter/postgres"
 	"github.com/dosu-logi/logistics-erp/internal/config"
 	"github.com/dosu-logi/logistics-erp/internal/integration/mailer"
 	"github.com/dosu-logi/logistics-erp/internal/integration/tracking3p"
@@ -13,8 +17,8 @@ import (
 	"github.com/dosu-logi/logistics-erp/internal/module/crm"
 	"github.com/dosu-logi/logistics-erp/internal/module/dashboard"
 	"github.com/dosu-logi/logistics-erp/internal/module/marketing"
-	"github.com/dosu-logi/logistics-erp/internal/module/sales"
 	"github.com/dosu-logi/logistics-erp/internal/module/tracking"
+	"github.com/dosu-logi/logistics-erp/internal/platform/httpx"
 	"github.com/dosu-logi/logistics-erp/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -56,9 +60,16 @@ func Setup(deps Deps) *gin.Engine {
 	custHex := crmhttp.NewCustomerHandler(custSvc)
 	ticketHex := crmhttp.NewTicketHandler(ticketSvc)
 
-	salesRepo := sales.NewRepository(deps.DB)
-	salesSvc := sales.NewService(salesRepo, mailer, deps.Config.UploadDir)
-	salesH := sales.NewHandler(salesSvc)
+	oppRepo := salesrepo.NewOpportunityRepo(deps.DB)
+	contractRepo := salesrepo.NewContractRepo(deps.DB)
+	quoteRepo := salesrepo.NewQuotationRepo(deps.DB)
+	mailAdapter := salesmailer.New(mailer)
+	oppSvc := salesapp.NewOpportunityService(oppRepo)
+	contractSvc := salesapp.NewContractService(contractRepo)
+	quoteSvc := salesapp.NewQuotationService(quoteRepo, contractRepo, mailAdapter)
+	oppHex := saleshttp.NewOpportunityHandler(oppSvc)
+	contractHex := saleshttp.NewContractHandler(contractSvc, deps.Config.UploadDir)
+	quoteHex := saleshttp.NewQuotationHandler(quoteSvc)
 
 	trackRepo := tracking.NewRepository(deps.DB)
 	trackSvc := tracking.NewService(trackRepo, trackClient)
@@ -123,27 +134,27 @@ func Setup(deps Deps) *gin.Engine {
 	protected.POST("/customers/:id/interactions", crmH.CreateInteraction)
 	protected.GET("/customers/:id/shipments", trackH.ListByCustomer)
 	protected.GET("/customers/:id/invoices", acctH.ListByCustomer)
-	protected.GET("/customers/:id/contracts", listContractsByCustomer(salesSvc))
+	protected.GET("/customers/:id/contracts", listContractsByCustomer(contractSvc))
 
-	// Sales
-	protected.GET("/opportunities", salesH.ListOpportunities)
-	protected.POST("/opportunities", salesH.CreateOpportunity)
-	protected.GET("/opportunities/:id", salesH.GetOpportunity)
-	protected.PUT("/opportunities/:id", salesH.UpdateOpportunity)
-	protected.DELETE("/opportunities/:id", salesH.DeleteOpportunity)
+	// Sales (hexagonal)
+	protected.GET("/opportunities", oppHex.List)
+	protected.POST("/opportunities", oppHex.Create)
+	protected.GET("/opportunities/:id", oppHex.Get)
+	protected.PUT("/opportunities/:id", oppHex.Update)
+	protected.DELETE("/opportunities/:id", oppHex.Delete)
 
-	protected.GET("/contracts", salesH.ListContracts)
-	protected.POST("/contracts", salesH.CreateContract)
-	protected.GET("/contracts/:id", salesH.GetContract)
-	protected.PUT("/contracts/:id", salesH.UpdateContract)
-	protected.POST("/contracts/:id/upload", salesH.UploadContract)
+	protected.GET("/contracts", contractHex.List)
+	protected.POST("/contracts", contractHex.Create)
+	protected.GET("/contracts/:id", contractHex.Get)
+	protected.PUT("/contracts/:id", contractHex.Update)
+	protected.POST("/contracts/:id/upload", contractHex.Upload)
 
-	protected.GET("/quotations", salesH.ListQuotations)
-	protected.POST("/quotations", salesH.CreateQuotation)
-	protected.GET("/quotations/:id", salesH.GetQuotation)
-	protected.PUT("/quotations/:id", salesH.UpdateQuotation)
-	protected.POST("/quotations/:id/send", salesH.SendQuotation)
-	protected.POST("/quotations/:id/convert", salesH.ConvertQuotation)
+	protected.GET("/quotations", quoteHex.List)
+	protected.POST("/quotations", quoteHex.Create)
+	protected.GET("/quotations/:id", quoteHex.Get)
+	protected.PUT("/quotations/:id", quoteHex.Update)
+	protected.POST("/quotations/:id/send", quoteHex.Send)
+	protected.POST("/quotations/:id/convert", quoteHex.Convert)
 
 	// Tracking
 	protected.GET("/shipments", trackH.List)
@@ -186,15 +197,15 @@ func Setup(deps Deps) *gin.Engine {
 	return r
 }
 
-func listContractsByCustomer(svc *sales.Service) gin.HandlerFunc {
+func listContractsByCustomer(svc *salesapp.ContractService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customerID := c.Param("id")
-		page, limit, offset := util.ParsePagination(c)
-		items, total, err := svc.ListContracts(c.Request.Context(), "", customerID, limit, offset)
+		page, limit, offset := httpx.ParsePageLimit(c)
+		items, total, err := svc.List(c.Request.Context(), "", customerID, limit, offset)
 		if err != nil {
-			util.InternalError(c, err.Error())
+			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		util.Paginated(c, items, page, limit, total)
+		httpx.List(c, items, httpx.Meta{Page: page, Limit: limit, Total: total})
 	}
 }

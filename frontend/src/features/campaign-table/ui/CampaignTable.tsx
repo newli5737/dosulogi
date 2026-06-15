@@ -1,0 +1,54 @@
+import { useCallback, useMemo, useState } from 'react'
+import { campaignApi } from '@/entities/campaign/api/campaignApi'
+import type { Campaign } from '@/entities/campaign/model/types'
+import { usePaginated } from '@/shared/hooks/usePaginated'
+import { useToken } from '@/app/providers/AuthProvider'
+import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
+import { Pagination } from '@/shared/ui/Pagination/Pagination'
+import { Button } from '@/shared/ui/Button/Button'
+import { CampaignModal } from '@/features/campaign-modal/ui/CampaignModal'
+
+export function CampaignTable() {
+  const token = useToken()
+  const [modal, setModal] = useState<Campaign | Record<string, never> | null>(null)
+
+  const fetchPage = useCallback(
+    (page: number, limit: number) => campaignApi.list(token!, page, limit),
+    [token],
+  )
+  const { rows, meta, page, setPage, loading, reload } = usePaginated<Campaign>(fetchPage)
+
+  const columns = useMemo<DataTableColumn<Campaign>[]>(() => [
+    { key: 'name', label: 'Tên chiến dịch' },
+    { key: 'type', label: 'Loại' },
+    { key: 'status', label: 'Trạng thái' },
+    { key: 'sent_count', label: 'Đã gửi' },
+    {
+      key: '_actions', label: '', render: (r) => (
+        <div className="row-actions">
+          <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button>
+          {r.status === 'draft' && token && (
+            <Button variant="primary" onClick={async () => { await campaignApi.send(token, r.id); reload() }}>Gửi</Button>
+          )}
+        </div>
+      ),
+    },
+  ], [token, reload])
+
+  return (
+    <>
+      <div className="page-header">
+        <h1>Marketing</h1>
+        <Button variant="primary" onClick={() => setModal({})}>+ Chiến dịch</Button>
+      </div>
+      <DataTable columns={columns} rows={rows} loading={loading} />
+      <Pagination page={page} limit={meta.limit} total={meta.total} onChange={setPage} />
+      <CampaignModal
+        open={modal !== null}
+        edit={modal && 'id' in modal && modal.id ? (modal as Campaign) : null}
+        onClose={() => setModal(null)}
+        onSaved={reload}
+      />
+    </>
+  )
+}

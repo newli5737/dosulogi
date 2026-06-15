@@ -24,4 +24,4 @@ internal/crm/
 
 ## Router wiring
 - `internal/router/router.go` only registers adapter/http handlers.
-- Do not add new files under deprecated `internal/module/` – migrate to hexagonal.
+- Do not add new files under deprecated `internal/module/` — migrate to hexagonal (`internal/crm/`, `internal/sales/`).

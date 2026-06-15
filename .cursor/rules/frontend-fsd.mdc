@@ -1,34 +1,46 @@
 ---
-description: Frontend FSD layer rules
+description: Frontend FSD + TypeScript strict rules
 globs: frontend/src/**/*
 alwaysApply: false
 ---
 
-# Frontend FSD
+# Frontend FSD + TypeScript
 
+## Stack bắt buộc
+- **React + TypeScript** — KHÔNG dùng `.jsx` / `.js` trong `src/`
+- `tsconfig.json`: `"strict": true`, `"noImplicitAny": true`
+- **Cấm `any`** — dùng `unknown` + type guard, hoặc generic cụ thể
+- Cấm `@ts-ignore` / `@ts-expect-error` trừ khi có comment giải thích lý do kỹ thuật
+
+## Layer FSD
 ```
 app/       → providers, router, global styles
-pages/     → route entry, thin composition
+pages/     → route entry, thin composition only
 widgets/   → layout shell, dashboard blocks
-features/  → modals, filters, actions (customer-modal, ticket-form)
-entities/  → customer/api.ts, customer/types.ts
-shared/ui/ → Modal, Pagination, DataTable, Input, Button
-shared/api/→ http client, parseMeta
+features/  → modals, filters, table actions
+entities/  → model/types.ts + api/*.ts
+shared/    → ui/, api/, hooks/, lib/
 ```
+
+## Types
+- Mỗi entity có `entities/<name>/model/types.ts` mirror BE JSON
+- API response: `PaginatedResponse<T>`, `ApiMeta` từ `shared/api/types.ts`
+- `http<T>()` generic — mọi API call phải khai báo return type
+- Form state: interface riêng, không reuse entity trực tiếp nếu shape khác (nullable fields)
 
 ## Modal pattern
 ```tsx
 // features/customer-modal/ui/CustomerModal.tsx
-// Uses shared/ui/Modal – fixed overlay, z-index 1000
 <Modal open={open} onClose={onClose} title="Thêm khách hàng">
   <CustomerForm onSuccess={onClose} />
 </Modal>
 ```
+- Modal dùng `createPortal` — overlay fixed, không inline trong page
 
 ## Pagination
-- Use `usePaginatedQuery(entityApi.list, filters)` hook in feature layer.
-- Page component only: `<CustomerPage />` renders `<CustomerTable />` + `<CustomerModal />`.
+- Server-side only via `usePaginated<T>()`
+- Page chỉ compose: `<CustomerPage />` → `<CustomerTable />`
 
 ## Styling
-- CSS variables in `app/styles/variables.css`.
-- No inline styles except dynamic values.
+- CSS variables trong `app/styles/variables.css`
+- Tránh inline style trừ giá trị dynamic
