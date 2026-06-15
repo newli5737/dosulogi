@@ -15,6 +15,11 @@ func RateLimit(store *cache.Store, limit int) gin.HandlerFunc {
 			c.Next()
 			return
 		}
+		// Only rate-limit mutating requests; reads are covered by auth + pagination.
+		if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead || c.Request.Method == http.MethodOptions {
+			c.Next()
+			return
+		}
 		userID := GetUserID(c)
 		if userID == "" {
 			userID = c.ClientIP()

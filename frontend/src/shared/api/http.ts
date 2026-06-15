@@ -37,6 +37,7 @@ async function request(path: string, options: HttpOptions = {}, retried = false)
       return request(path, options, true)
     }
   }
+  // Do not retry on 429 — avoids amplifying rate-limit storms.
   return res
 }
 

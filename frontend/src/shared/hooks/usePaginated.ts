@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ApiMeta, PaginatedResponse } from '../api/types'
 import { parseMeta } from '../api/types'
 
@@ -18,12 +18,16 @@ export function usePaginated<T, F extends Record<string, string | undefined> = R
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
+  const filtersKey = JSON.stringify(filters)
+
   const reload = useCallback(async () => {
     if (!enabled) return
     setLoading(true)
     setError('')
     try {
-      const res = await fetchPage(page, limit, filters)
+      const res = await fetchPage(page, limit, filtersRef.current)
       setRows(Array.isArray(res.data) ? res.data : [])
       setMeta(parseMeta(res, page, limit))
     } catch (e) {
@@ -32,7 +36,8 @@ export function usePaginated<T, F extends Record<string, string | undefined> = R
     } finally {
       setLoading(false)
     }
-  }, [fetchPage, page, limit, filters, enabled])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- filtersKey tracks filter values
+  }, [fetchPage, page, limit, filtersKey, enabled])
 
   useEffect(() => { void reload() }, [reload])
 
