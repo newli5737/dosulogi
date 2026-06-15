@@ -114,7 +114,8 @@
 .shell-link:hover { background: var(--sidebar-active); color: #fff; }
 .shell-link.active { background: var(--primary); color: #fff; }
 
-.shell-icon { opacity: .85; width: 18px; text-align: center; flex-shrink: 0; }
+.shell-icon { opacity: .85; width: 18px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+.shell-nav-group__chevron { transition: transform .15s ease; flex-shrink: 0; }
 
 .shell-main { display: flex; flex-direction: column; min-width: 0; }
 

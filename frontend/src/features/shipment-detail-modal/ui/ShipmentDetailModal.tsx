@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Modal } from '@/shared/ui/Modal/Modal'
 import { Button } from '@/shared/ui/Button/Button'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
+import { shipmentStatusLabel } from '@/shared/lib/labels'
 import type { Shipment, ShipmentEvent } from '@/entities/shipment/model/types'
 
 interface ShipmentDetailModalProps {
@@ -57,7 +58,7 @@ export function ShipmentDetailModal({ open, shipmentId, onClose, onSynced }: Shi
       {loading && !shipment ? <p>Đang tải...</p> : shipment && (
         <>
           <dl className="detail-dl" style={{ marginBottom: 16 }}>
-            <dt>Trạng thái</dt><dd>{shipment.status || '—'}</dd>
+            <dt>Trạng thái</dt><dd>{shipmentStatusLabel(shipment.status)}</dd>
             <dt>Điểm đi</dt><dd>{shipment.origin || '—'}</dd>
             <dt>Điểm đến</dt><dd>{shipment.destination || '—'}</dd>
             <dt>ETA</dt><dd>{shipment.estimated_delivery?.slice(0, 10) || '—'}</dd>
@@ -74,7 +75,7 @@ export function ShipmentDetailModal({ open, shipmentId, onClose, onSynced }: Shi
               <div key={ev.id} className="timeline__item">
                 <div className="timeline__time">{ev.event_time?.slice(0, 16).replace('T', ' ') || ev.created_at.slice(0, 16).replace('T', ' ')}</div>
                 <div className="timeline__body">
-                  <strong>{ev.status || 'Cập nhật'}</strong>
+                  <strong>{shipmentStatusLabel(ev.status) || 'Cập nhật'}</strong>
                   {ev.location && <span> · {ev.location}</span>}
                   {ev.description && <p>{ev.description}</p>}
                 </div>

@@ -5,6 +5,7 @@ import { usePaginated } from '@/shared/hooks/usePaginated'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
+import { quotationStatusLabel } from '@/shared/lib/labels'
 import { QuotationModal } from '@/features/quotation-modal/ui/QuotationModal'
 
 export function QuotationTable() {
@@ -18,7 +19,7 @@ export function QuotationTable() {
 
   const columns = useMemo<DataTableColumn<Quotation>[]>(() => [
     { key: 'code', label: 'Mã' },
-    { key: 'status', label: 'Trạng thái', render: (r) => <span className={`badge badge--${r.status === 'accepted' ? 'gold' : 'open'}`}>{r.status}</span> },
+    { key: 'status', label: 'Trạng thái', render: (r) => <span className={`badge badge--${r.status === 'accepted' ? 'gold' : 'open'}`}>{quotationStatusLabel(r.status)}</span> },
     { key: 'total', label: 'Tổng', render: (r) => r.total ? `${Number(r.total).toLocaleString('vi-VN')} ₫` : '—' },
     { key: 'valid_until', label: 'Hết hạn', render: (r) => r.valid_until ? r.valid_until.slice(0, 10) : '—' },
     {

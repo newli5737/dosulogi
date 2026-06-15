@@ -5,6 +5,7 @@ import { usePaginated } from '@/shared/hooks/usePaginated'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
+import { contractStatusLabel } from '@/shared/lib/labels'
 import { ContractModal } from '@/features/contract-modal/ui/ContractModal'
 
 export function ContractTable() {
@@ -13,7 +14,7 @@ export function ContractTable() {
   const columns = useMemo<DataTableColumn<Contract>[]>(() => [
     { key: 'code', label: 'Mã' },
     { key: 'title', label: 'Tiêu đề', render: (r) => r.title || '—' },
-    { key: 'status', label: 'Trạng thái' },
+    { key: 'status', label: 'Trạng thái', render: (r) => contractStatusLabel(r.status) },
     { key: 'service_type', label: 'Dịch vụ', render: (r) => r.service_type || '—' },
     { key: 'value', label: 'Giá trị', render: (r) => r.value ? `${Number(r.value).toLocaleString('vi-VN')} ₫` : '—' },
     { key: '_actions', label: '', render: (r) => <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button> },

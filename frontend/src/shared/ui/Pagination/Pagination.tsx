@@ -12,7 +12,7 @@ export function Pagination({ page, limit, total, onChange }: PaginationProps) {
   return (
     <div className="pagination">
       <button type="button" disabled={page <= 1} onClick={() => onChange(page - 1)}>←</button>
-      <span>Trang {page} / {pages} ({total} bản ghi)</span>
+      <span>Trang {page} / {pages}</span>
       <button type="button" disabled={page >= pages} onClick={() => onChange(page + 1)}>→</button>
     </div>
   )

@@ -5,14 +5,15 @@ import { usePaginated } from '@/shared/hooks/usePaginated'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
+import { ticketPriorityLabel, ticketStatusLabel } from '@/shared/lib/labels'
 import { TicketModal } from '@/features/ticket-modal/ui/TicketModal'
 import { TicketDetailModal } from '@/features/ticket-detail-modal/ui/TicketDetailModal'
 
 const columns: DataTableColumn<Ticket>[] = [
   { key: 'code', label: 'Mã' },
   { key: 'title', label: 'Tiêu đề' },
-  { key: 'priority', label: 'Ưu tiên', render: (r) => <span className={`badge badge--${r.priority === 'urgent' ? 'urgent' : 'open'}`}>{r.priority}</span> },
-  { key: 'status', label: 'Trạng thái' },
+  { key: 'priority', label: 'Ưu tiên', render: (r) => <span className={`badge badge--${r.priority === 'urgent' ? 'urgent' : 'open'}`}>{ticketPriorityLabel(r.priority)}</span> },
+  { key: 'status', label: 'Trạng thái', render: (r) => ticketStatusLabel(r.status) },
   { key: 'customer', label: 'KH', render: (r) => r.customer?.name || '—' },
   { key: 'is_overdue', label: 'SLA', render: (r) => r.is_overdue ? '⚠ Quá hạn' : 'OK' },
 ]

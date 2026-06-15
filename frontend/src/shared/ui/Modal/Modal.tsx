@@ -1,4 +1,6 @@
 import { createPortal } from 'react-dom'
+import type { LucideIcon } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import './modal.css'
 
@@ -8,16 +10,27 @@ interface ModalProps {
   title: string
   children: ReactNode
   wide?: boolean
+  icon?: LucideIcon
+  tone?: 'blue' | 'green' | 'amber' | 'rose' | 'violet' | 'cyan'
 }
 
-export function Modal({ open, onClose, title, children, wide }: ModalProps) {
+export function Modal({ open, onClose, title, children, wide, icon: Icon, tone = 'blue' }: ModalProps) {
   if (!open) return null
   return createPortal(
     <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div className={`modal-panel ${wide ? 'modal-panel--wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="modal-header">
-          <h3>{title}</h3>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
+          <div className="modal-header__title">
+            {Icon && (
+              <span className={`modal-icon modal-icon--${tone}`} aria-hidden>
+                <Icon size={18} strokeWidth={2.2} />
+              </span>
+            )}
+            <h3>{title}</h3>
+          </div>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">
+            <X size={18} />
+          </button>
         </header>
         <div className="modal-body">{children}</div>
       </div>

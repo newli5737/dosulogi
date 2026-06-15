@@ -3,6 +3,7 @@ import { Modal } from '@/shared/ui/Modal/Modal'
 import { Field, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { ticketApi } from '@/entities/ticket/api/ticketApi'
+import { TICKET_PRIORITY_OPTIONS, TICKET_STATUS_OPTIONS } from '@/shared/lib/labels'
 import type { Ticket, TicketComment } from '@/entities/ticket/model/types'
 
 interface TicketDetailModalProps {
@@ -80,15 +81,15 @@ export function TicketDetailModal({ open, ticketId, onClose, onSaved }: TicketDe
               <form onSubmit={saveTicket} className="form-grid" style={{ marginBottom: 16 }}>
                 <Field label="Trạng thái">
                   <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                    {['open', 'in_progress', 'pending', 'resolved', 'closed'].map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                    {TICKET_STATUS_OPTIONS.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </Select>
                 </Field>
                 <Field label="Ưu tiên">
                   <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
-                    {['low', 'medium', 'high', 'urgent'].map((p) => (
-                      <option key={p} value={p}>{p}</option>
+                    {TICKET_PRIORITY_OPTIONS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
                     ))}
                   </Select>
                 </Field>

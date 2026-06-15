@@ -18,32 +18,32 @@
 .dash-kpi--cyan { background: linear-gradient(135deg, #ecfeff, #cffafe); }
 .dash-kpi--green { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
 .dash-kpi--amber { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.dash-kpi--rose { background: linear-gradient(135deg, #fff1f2, #ffe4e6); }
+.dash-kpi--violet { background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
 
-.dash-section { font-size: 1rem; margin-bottom: 16px; color: var(--text-muted); }
-
-.dash-funnel { display: flex; flex-direction: column; gap: 10px; }
-
-.dash-funnel-item {
+.dash-charts {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-  padding: 12px 16px;
-  background: var(--surface-muted);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
 }
 
-.dash-funnel-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: var(--primary-light);
-  opacity: .5;
-  z-index: 0;
+.dash-chart-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 16px 8px;
+  background: var(--surface);
 }
 
-.dash-funnel-label { position: relative; font-weight: 600; text-transform: capitalize; z-index: 1; }
-.dash-funnel-meta { position: relative; color: var(--text-muted); font-size: .8125rem; z-index: 1; }
+.dash-chart-card--wide { grid-column: 1 / -1; }
+
+.dash-chart-card h2 {
+  margin: 0 0 12px;
+  font-size: .95rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .dash-charts { grid-template-columns: 1fr; }
+  .dash-chart-card--wide { grid-column: auto; }
+}

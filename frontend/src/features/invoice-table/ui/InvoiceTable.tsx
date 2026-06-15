@@ -5,6 +5,7 @@ import { usePaginated } from '@/shared/hooks/usePaginated'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
+import { invoiceStatusLabel } from '@/shared/lib/labels'
 import { InvoiceModal } from '@/features/invoice-modal/ui/InvoiceModal'
 
 async function downloadInvoicePdf(invoice: Invoice) {
@@ -28,7 +29,7 @@ export function InvoiceTable() {
 
   const columns = useMemo<DataTableColumn<Invoice>[]>(() => [
     { key: 'code', label: 'Mã' },
-    { key: 'status', label: 'Trạng thái', render: (r) => <span className={`badge badge--${r.status === 'paid' ? 'gold' : 'open'}`}>{r.status}</span> },
+    { key: 'status', label: 'Trạng thái', render: (r) => <span className={`badge badge--${r.status === 'paid' ? 'gold' : 'open'}`}>{invoiceStatusLabel(r.status)}</span> },
     { key: 'total', label: 'Tổng', render: (r) => r.total ? `${Number(r.total).toLocaleString('vi-VN')} ₫` : '—' },
     { key: 'due_date', label: 'Hạn TT', render: (r) => r.due_date ? r.due_date.slice(0, 10) : '—' },
     {

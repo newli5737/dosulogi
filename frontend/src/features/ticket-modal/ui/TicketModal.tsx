@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Ticket } from 'lucide-react'
 import { Modal } from '@/shared/ui/Modal/Modal'
 import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
@@ -50,7 +51,7 @@ export function TicketModal({ open, onClose, onSaved }: TicketModalProps) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Tạo ticket">
+    <Modal open={open} onClose={onClose} title="Tạo ticket" icon={Ticket} tone="rose">
       <form onSubmit={submit}>
         <Field label="Khách hàng" required>
           <Select value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })} required>

@@ -7,6 +7,7 @@ import { opportunityApi } from '@/entities/opportunity/api/opportunityApi'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
 import type { Opportunity, StageHistoryEntry } from '@/entities/opportunity/model/types'
 import type { Shipment } from '@/entities/shipment/model/types'
+import { OPPORTUNITY_STAGE_OPTIONS, opportunityStageLabel, shipmentStatusLabel } from '@/shared/lib/labels'
 
 interface OpportunityFormState {
   customer_id: string
@@ -114,10 +115,10 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
             <CustomerSelect value={form.customer_id} onChange={(v) => set('customer_id', v)} required />
           </Field>
           <Field label="Tiêu đề" required><Input value={form.title} onChange={(e) => set('title', e.target.value)} required /></Field>
-          <Field label="Stage">
+          <Field label="Giai đoạn">
             <Select value={form.stage} onChange={(e) => set('stage', e.target.value)}>
-              {['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost'].map((s) => (
-                <option key={s} value={s}>{s}</option>
+              {OPPORTUNITY_STAGE_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </Select>
           </Field>
@@ -135,7 +136,7 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
             {shipments.map((s) => (
               <label key={s.id}>
                 <input type="checkbox" checked={form.shipment_ids.includes(s.id)} onChange={() => toggleShipment(s.id)} />
-                {s.tracking_code} ({s.status || '—'})
+                {s.tracking_code} ({shipmentStatusLabel(s.status)})
               </label>
             ))}
             {!shipments.length && <p className="muted">Chưa có vận đơn</p>}
@@ -144,11 +145,11 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
 
         {edit && history.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <strong>Lịch sử stage</strong>
+            <strong>Lịch sử giai đoạn</strong>
             <ul className="stage-history">
               {history.map((h) => (
                 <li key={h.id}>
-                  {h.from_stage || '—'} → <strong>{h.to_stage}</strong>
+                  {opportunityStageLabel(h.from_stage)} → <strong>{opportunityStageLabel(h.to_stage)}</strong>
                   {' · '}{h.changed_at.slice(0, 16).replace('T', ' ')}
                   {h.changer_name && ` · ${h.changer_name}`}
                 </li>

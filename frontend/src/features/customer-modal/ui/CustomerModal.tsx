@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Users } from 'lucide-react'
 import { Modal } from '@/shared/ui/Modal/Modal'
 import { Field, Input, Select } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
@@ -68,7 +69,7 @@ export function CustomerModal({ open, onClose, onSaved, edit }: CustomerModalPro
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={edit ? 'Sửa khách hàng' : 'Thêm khách hàng'} wide>
+    <Modal open={open} onClose={onClose} title={edit ? 'Sửa khách hàng' : 'Thêm khách hàng'} wide icon={Users} tone="blue">
       <form onSubmit={submit}>
         <div className="form-grid">
           <Field label="Tên" required><Input value={form.name} onChange={(e) => set('name', e.target.value)} required /></Field>

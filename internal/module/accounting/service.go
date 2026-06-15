@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dosu-logi/logistics-erp/internal/integration/mailer"
@@ -17,10 +18,20 @@ type Service struct {
 	repo      *Repository
 	mailer    *mailer.Client
 	uploadDir string
+	company   CompanyInfo
 }
 
-func NewService(repo *Repository, mailer *mailer.Client, uploadDir string) *Service {
-	return &Service{repo: repo, mailer: mailer, uploadDir: uploadDir}
+type CompanyInfo struct {
+	Name    string
+	TaxCode string
+	Address string
+	Phone   string
+	Email   string
+	Tagline string
+}
+
+func NewService(repo *Repository, mailer *mailer.Client, uploadDir string, company CompanyInfo) *Service {
+	return &Service{repo: repo, mailer: mailer, uploadDir: uploadDir, company: company}
 }
 
 func calcInvoiceTotals(items []LineItem, taxRate float64) (subtotal, taxAmount, total float64) {
@@ -109,18 +120,58 @@ func (s *Service) CancelInvoice(ctx context.Context, id uuid.UUID) error {
 
 func (s *Service) generatePDF(ctx context.Context, inv *Invoice) error {
 	items, _ := ParseItems(inv.Items)
-	name, _ := s.repo.GetCustomerName(ctx, inv.CustomerID)
+	billing, _ := s.repo.GetCustomerBilling(ctx, inv.CustomerID)
 	pdfItems := make([]util.InvoiceItem, len(items))
+	route := ""
+	plate := ""
+	shipmentCode := ""
+	if inv.ShipmentID != nil {
+		if sh, err := s.repo.GetShipmentBrief(ctx, *inv.ShipmentID); err == nil {
+			shipmentCode = sh.TrackingCode
+			route = strings.TrimSpace(sh.Origin + " → " + sh.Destination)
+		}
+	}
 	for i, it := range items {
-		pdfItems[i] = util.InvoiceItem{Description: it.Description, Qty: it.Qty, UnitPrice: it.UnitPrice, Amount: it.Amount}
+		pdfItems[i] = util.InvoiceItem{
+			Description: it.Description,
+			Unit:        "Chuyến",
+			Qty:         it.Qty,
+			UnitPrice:   it.UnitPrice,
+			Amount:      it.Amount,
+			Route:       route,
+			Plate:       plate,
+		}
+	}
+	data := util.InvoicePDFData{
+		Code:       inv.Code,
+		Serial:     "DL/26E",
+		Template:   "1/001",
+		IssuedDate: inv.CreatedAt.Format("2006-01-02"),
+		DueDate:    util.FormatDate(inv.DueDate),
+		CompanyName:    s.company.Name,
+		CompanyTaxCode: s.company.TaxCode,
+		CompanyAddress: s.company.Address,
+		CompanyPhone:   s.company.Phone,
+		CompanyEmail:   s.company.Email,
+		CompanyTagline: s.company.Tagline,
+		Items:     pdfItems,
+		Subtotal:  *inv.Subtotal,
+		TaxRate:   inv.TaxRate,
+		TaxAmount: *inv.TaxAmount,
+		Total:     *inv.Total,
+		Currency:  inv.Currency,
+		Route:         route,
+		VehiclePlate:  plate,
+		ShipmentCode:  shipmentCode,
+	}
+	if billing != nil {
+		data.CustomerName = billing.Name
+		data.CustomerTaxCode = billing.TaxCode
+		data.CustomerAddress = billing.Address
+		data.CustomerPhone = billing.Phone
 	}
 	filename := inv.Code + ".pdf"
-	path, err := util.GenerateInvoicePDF(util.InvoicePDFData{
-		Code: inv.Code, Customer: name, Items: pdfItems,
-		Subtotal: *inv.Subtotal, TaxRate: inv.TaxRate, TaxAmount: *inv.TaxAmount,
-		Total: *inv.Total, Currency: inv.Currency,
-		DueDate: util.FormatDate(inv.DueDate), IssuedDate: inv.CreatedAt.Format("2006-01-02"),
-	}, filepath.Join(s.uploadDir, "invoices"), filename)
+	path, err := util.GenerateInvoicePDF(data, filepath.Join(s.uploadDir, "invoices"), filename)
 	if err != nil {
 		return err
 	}

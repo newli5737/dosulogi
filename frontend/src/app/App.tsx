@@ -18,6 +18,8 @@ import { ShipmentMapPage } from '@/pages/shipment-map/ui/ShipmentMapPage'
 import { InvoicesPage } from '@/pages/invoices/ui/InvoicesPage'
 import { PaymentsPage } from '@/pages/payments/ui/PaymentsPage'
 import { ProfilePage } from '@/pages/profile/ui/ProfilePage'
+import { InboxPage } from '@/pages/inbox/ui/InboxPage'
+import { ChatAccountsPage } from '@/pages/chat-accounts/ui/ChatAccountsPage'
 
 function Guard({ children }: { children: ReactNode }) {
   const { session, checking } = useAuth()
@@ -42,6 +44,7 @@ function AppRouter() {
         <Route path="customers" element={<CustomersPage />} />
         <Route path="customers/:id" element={<CustomerDetailPage />} />
         <Route path="tickets" element={<TicketsPage />} />
+        <Route path="inbox" element={<InboxPage />} />
         <Route path="opportunities" element={<OpportunitiesPage />} />
         <Route path="contracts" element={<ContractsPage />} />
         <Route path="quotations" element={<QuotationsPage />} />
@@ -52,6 +55,7 @@ function AppRouter() {
         <Route path="campaigns" element={<CampaignsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="chat-accounts" element={<ChatAccountsPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -41,6 +41,15 @@ type Config struct {
 
 	UploadDir string
 
+	CompanyName    string
+	CompanyTaxCode string
+	CompanyAddress string
+	CompanyPhone   string
+	CompanyEmail   string
+	CompanyTagline string
+
+	ZaloBridgeURL string
+
 	CORSOrigins []string
 }
 
@@ -83,6 +92,15 @@ func Load() (*Config, error) {
 		TrackingWebhookSecret: getEnv("TRACKING_WEBHOOK_SECRET", "dev-tracking-secret"),
 
 		UploadDir: getEnv("UPLOAD_DIR", "./uploads"),
+
+		CompanyName:    getEnv("COMPANY_NAME", "CÔNG TY TNHH THƯƠNG MẠI & DỊCH VỤ DOSU"),
+		CompanyTaxCode: getEnv("COMPANY_TAX_CODE", ""),
+		CompanyAddress: getEnv("COMPANY_ADDRESS", "Số 03, Ngách 72/59 Đường Tây Mỗ, Phường Tây Mỗ, TP Hà Nội"),
+		CompanyPhone:   getEnv("COMPANY_PHONE", "0346 437 915 (Lại Thế Ngọc)"),
+		CompanyEmail:   getEnv("COMPANY_EMAIL", "support@dosutech.site"),
+		CompanyTagline: getEnv("COMPANY_TAGLINE", "Đối tác công nghệ tin cậy, xây dựng giải pháp toàn diện từ ý tưởng đến sản phẩm hoàn thiện."),
+
+		ZaloBridgeURL: getEnv("ZALO_BRIDGE_URL", "http://127.0.0.1:8090"),
 
 		CORSOrigins: splitCSV(getEnv("CORS_ORIGINS", "http://localhost:5173,http://logi.dosutech.site")),
 	}, nil

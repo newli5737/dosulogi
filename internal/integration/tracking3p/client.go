@@ -55,7 +55,7 @@ func (c *Client) FetchShipment(ctx context.Context, trackingCode string) (*Shipm
 		}, nil
 	}
 
-	url := fmt.Sprintf("%s/shipments/%s", c.baseURL, trackingCode)
+	url := fmt.Sprintf("%s/v1/shipments/%s", c.baseURL, trackingCode)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

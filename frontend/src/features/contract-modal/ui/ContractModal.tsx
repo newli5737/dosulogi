@@ -4,6 +4,7 @@ import { Field, Input, Select } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
 import { contractApi } from '@/entities/contract/api/contractApi'
+import { CONTRACT_STATUS_OPTIONS } from '@/shared/lib/labels'
 import type { Contract, ContractStatus, ServiceType } from '@/entities/contract/model/types'
 
 interface ContractFormState {
@@ -24,7 +25,6 @@ const empty: ContractFormState = {
 }
 
 const SERVICE_TYPES: ServiceType[] = ['FCL', 'LCL', 'air', 'express', 'road']
-const STATUSES: ContractStatus[] = ['draft', 'active', 'expired', 'terminated']
 
 interface ContractModalProps {
   open: boolean
@@ -123,7 +123,7 @@ export function ContractModal({ open, onClose, onSaved, edit }: ContractModalPro
           </Field>
           <Field label="Trạng thái">
             <Select value={form.status} onChange={(e) => set('status', e.target.value as ContractStatus)}>
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {CONTRACT_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </Select>
           </Field>
           <Field label="Ngày bắt đầu" required><Input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} required /></Field>

@@ -10,6 +10,19 @@ export interface DashboardSummary {
   shipment_count: number
   new_customers: number
   total_ar: number
+  open_tickets: number
+  active_opportunities: number
+  paid_invoices: number
+}
+
+export interface TrendPoint {
+  label: string
+  amount: number
+}
+
+export interface StatusCount {
+  status: string
+  count: number
 }
 
 export interface FunnelStage {
@@ -48,6 +61,12 @@ export const dashboardApi = {
     http('/api/v1/dashboard/summary'),
   funnel: (): Promise<FunnelStage[]> =>
     http('/api/v1/dashboard/sales-funnel'),
+  revenueTrend: (): Promise<TrendPoint[]> =>
+    http('/api/v1/dashboard/revenue-trend'),
+  ticketStats: (): Promise<StatusCount[]> =>
+    http('/api/v1/dashboard/ticket-stats'),
+  shipmentStats: (): Promise<StatusCount[]> =>
+    http('/api/v1/dashboard/shipment-stats'),
 }
 
 export const reportApi = {

@@ -7,6 +7,7 @@ import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { ShipmentModal } from '@/features/shipment-modal/ui/ShipmentModal'
 import { ShipmentDetailModal } from '@/features/shipment-detail-modal/ui/ShipmentDetailModal'
+import { shipmentStatusLabel } from '@/shared/lib/labels'
 
 export function ShipmentTable() {
   const [open, setOpen] = useState(false)
@@ -14,7 +15,7 @@ export function ShipmentTable() {
 
   const columns = useMemo<DataTableColumn<Shipment>[]>(() => [
     { key: 'tracking_code', label: 'Mã vận đơn' },
-    { key: 'status', label: 'Trạng thái', render: (r) => r.status || '—' },
+    { key: 'status', label: 'Trạng thái', render: (r) => shipmentStatusLabel(r.status) },
     { key: 'origin', label: 'Điểm đi', render: (r) => r.origin || '—' },
     { key: 'destination', label: 'Điểm đến', render: (r) => r.destination || '—' },
     { key: 'estimated_delivery', label: 'ETA', render: (r) => r.estimated_delivery ? r.estimated_delivery.slice(0, 10) : '—' },

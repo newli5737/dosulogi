@@ -35,7 +35,9 @@ install_go
 export PATH="/usr/local/go/bin:${PATH:-}"
 
 echo "==> Build backend"
+mkdir -p bin
 go build -o server ./cmd/server
+go build -o bin/gps-tracker ./cmd/gps-tracker
 
 echo "==> Build frontend"
 if [[ -d frontend ]]; then
@@ -65,6 +67,13 @@ $SUDO cp deploy/systemd/dosulogi.service /etc/systemd/system/
 $SUDO systemctl daemon-reload
 $SUDO systemctl enable dosulogi
 $SUDO systemctl restart dosulogi
+
+if [[ -f deploy/systemd/dosulogi-gps-tracker.service ]]; then
+  $SUDO cp deploy/systemd/dosulogi-gps-tracker.service /etc/systemd/system/
+  $SUDO systemctl daemon-reload
+  $SUDO systemctl enable dosulogi-gps-tracker 2>/dev/null || true
+  $SUDO systemctl restart dosulogi-gps-tracker 2>/dev/null || true
+fi
 
 echo "Done."
 echo "  API: http://api-logi.dosutech.site"

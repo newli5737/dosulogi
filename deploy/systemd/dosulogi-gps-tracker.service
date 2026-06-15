@@ -1,0 +1,19 @@
+[Unit]
+Description=Dosu Logi GPS Tracker Mock
+After=network.target
+
+[Service]
+Type=simple
+User=dosulogi
+WorkingDirectory=/home/dosulogi/dosulogi
+Environment=GPS_PORT=8091
+Environment=GPS_API_KEY=dev-gps-api-key
+Environment=GPS_WEBHOOK_URL=https://api-logi.dosutech.site/api/v1/webhooks/tracking
+Environment=GPS_WEBHOOK_SECRET=dev-tracking-secret
+Environment=GPS_PUSH_INTERVAL_SEC=30
+ExecStart=/home/dosulogi/dosulogi/bin/gps-tracker
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

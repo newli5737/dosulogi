@@ -204,6 +204,60 @@ func (r *Repository) ARReport(ctx context.Context) ([]ARReport, error) {
 	return list, nil
 }
 
+type CustomerBilling struct {
+	Name     string
+	TaxCode  string
+	Address  string
+	Phone    string
+}
+
+type ShipmentBrief struct {
+	TrackingCode string
+	Origin       string
+	Destination  string
+}
+
+func (r *Repository) GetCustomerBilling(ctx context.Context, id uuid.UUID) (*CustomerBilling, error) {
+	var b CustomerBilling
+	var tax, addr, phone, province *string
+	err := r.db.QueryRow(ctx, `
+		SELECT name, tax_code, address, phone, province FROM customers WHERE id=$1`, id,
+	).Scan(&b.Name, &tax, &addr, &phone, &province)
+	if err != nil {
+		return nil, err
+	}
+	if tax != nil {
+		b.TaxCode = *tax
+	}
+	if addr != nil && *addr != "" {
+		b.Address = *addr
+	} else if province != nil {
+		b.Address = *province
+	}
+	if phone != nil {
+		b.Phone = *phone
+	}
+	return &b, nil
+}
+
+func (r *Repository) GetShipmentBrief(ctx context.Context, id uuid.UUID) (*ShipmentBrief, error) {
+	var s ShipmentBrief
+	var origin, dest *string
+	err := r.db.QueryRow(ctx, `
+		SELECT tracking_code, origin, destination FROM shipments WHERE id=$1`, id,
+	).Scan(&s.TrackingCode, &origin, &dest)
+	if err != nil {
+		return nil, err
+	}
+	if origin != nil {
+		s.Origin = *origin
+	}
+	if dest != nil {
+		s.Destination = *dest
+	}
+	return &s, nil
+}
+
 func (r *Repository) GetCustomerName(ctx context.Context, id uuid.UUID) (string, error) {
 	var name string
 	err := r.db.QueryRow(ctx, `SELECT name FROM customers WHERE id=$1`, id).Scan(&name)

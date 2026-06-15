@@ -35,6 +35,33 @@ func (r *Router) SalesFunnel(c *gin.Context) {
 	util.JSONList(c, http.StatusOK, items)
 }
 
+func (r *Router) RevenueTrend(c *gin.Context) {
+	items, err := r.handler.revenueTrend(c.Request.Context())
+	if err != nil {
+		util.InternalError(c, err.Error())
+		return
+	}
+	util.JSONList(c, http.StatusOK, items)
+}
+
+func (r *Router) TicketStats(c *gin.Context) {
+	items, err := r.handler.ticketStats(c.Request.Context())
+	if err != nil {
+		util.InternalError(c, err.Error())
+		return
+	}
+	util.JSONList(c, http.StatusOK, items)
+}
+
+func (r *Router) ShipmentStats(c *gin.Context) {
+	items, err := r.handler.shipmentStats(c.Request.Context())
+	if err != nil {
+		util.InternalError(c, err.Error())
+		return
+	}
+	util.JSONList(c, http.StatusOK, items)
+}
+
 func (r *Router) ShipmentMap(c *gin.Context) {
 	items, err := r.trackingSvc.ListMapPoints(c.Request.Context())
 	if err != nil {

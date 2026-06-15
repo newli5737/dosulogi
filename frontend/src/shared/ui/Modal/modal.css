@@ -32,15 +32,40 @@
 
 .modal-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
 
+.modal-header__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.modal-icon--blue { background: #dbeafe; color: #2563eb; }
+.modal-icon--green { background: #dcfce7; color: #16a34a; }
+.modal-icon--amber { background: #fef3c7; color: #d97706; }
+.modal-icon--rose { background: #ffe4e6; color: #e11d48; }
+.modal-icon--violet { background: #ede9fe; color: #7c3aed; }
+.modal-icon--cyan { background: #cffafe; color: #0891b2; }
+
 .modal-close {
   border: none;
   background: var(--surface-muted);
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  font-size: 1.25rem;
   cursor: pointer;
   color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-body { padding: 24px; }

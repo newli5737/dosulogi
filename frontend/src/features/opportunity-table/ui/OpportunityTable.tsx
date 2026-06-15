@@ -7,7 +7,7 @@ import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { OpportunityModal } from '@/features/opportunity-modal/ui/OpportunityModal'
 
-const STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost'] as const
+import { OPPORTUNITY_STAGE_OPTIONS, opportunityStageLabel } from '@/shared/lib/labels'
 
 type OpportunityFilters = { stage: string }
 
@@ -19,7 +19,7 @@ export function OpportunityTable() {
     { key: 'code', label: 'Mã', render: (r) => r.code || '—' },
     { key: 'title', label: 'Tiêu đề' },
     { key: 'customer', label: 'Khách hàng', render: (r) => r.customer?.name || '—' },
-    { key: 'stage', label: 'Stage', render: (r) => <span className={`badge badge--${r.stage === 'won' ? 'gold' : 'open'}`}>{r.stage}</span> },
+    { key: 'stage', label: 'Giai đoạn', render: (r) => <span className={`badge badge--${r.stage === 'won' ? 'gold' : 'open'}`}>{opportunityStageLabel(r.stage)}</span> },
     { key: 'value', label: 'Giá trị', render: (r) => r.value ? `${Number(r.value).toLocaleString('vi-VN')} ₫` : '—' },
     { key: 'expected_close', label: 'Dự kiến đóng', render: (r) => r.expected_close ? r.expected_close.slice(0, 10) : '—' },
     { key: '_actions', label: '', render: (r) => <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button> },
@@ -43,8 +43,8 @@ export function OpportunityTable() {
       </div>
       <div className="toolbar">
         <select className="field-input" value={stage} onChange={(e) => { setStage(e.target.value); setPage(1) }}>
-          <option value="">Tất cả stage</option>
-          {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+          <option value="">Tất cả giai đoạn</option>
+          {OPPORTUNITY_STAGE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </div>
       <DataTable columns={columns} rows={rows} loading={loading} />

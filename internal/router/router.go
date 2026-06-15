@@ -16,6 +16,8 @@ import (
 	"github.com/dosu-logi/logistics-erp/internal/module/auth"
 	"github.com/dosu-logi/logistics-erp/internal/module/dashboard"
 	"github.com/dosu-logi/logistics-erp/internal/module/marketing"
+	"github.com/dosu-logi/logistics-erp/internal/chat"
+	"github.com/dosu-logi/logistics-erp/internal/chat/adapter/zalo"
 	"github.com/dosu-logi/logistics-erp/internal/module/tracking"
 	"github.com/dosu-logi/logistics-erp/internal/platform/cache"
 	"github.com/dosu-logi/logistics-erp/internal/platform/httpx"
@@ -74,7 +76,14 @@ func Setup(deps Deps) *gin.Engine {
 	trackH := tracking.NewHandler(trackSvc, deps.Config.TrackingWebhookSecret)
 
 	acctRepo := accounting.NewRepository(deps.DB)
-	acctSvc := accounting.NewService(acctRepo, mailer, deps.Config.UploadDir)
+	acctSvc := accounting.NewService(acctRepo, mailer, deps.Config.UploadDir, accounting.CompanyInfo{
+		Name:    deps.Config.CompanyName,
+		TaxCode: deps.Config.CompanyTaxCode,
+		Address: deps.Config.CompanyAddress,
+		Phone:   deps.Config.CompanyPhone,
+		Email:   deps.Config.CompanyEmail,
+		Tagline: deps.Config.CompanyTagline,
+	})
 	acctH := accounting.NewHandler(acctSvc, deps.Config.SePayWebhookSecret)
 
 	mktRepo := marketing.NewRepository(deps.DB)
@@ -82,6 +91,11 @@ func Setup(deps Deps) *gin.Engine {
 	mktH := marketing.NewHandler(mktSvc)
 
 	dashH := dashboard.NewRouter(dashboard.NewHandler(deps.DB), trackSvc)
+
+	chatRepo := chat.NewRepository(deps.DB)
+	chatZalo := zalo.NewClient(deps.Config.ZaloBridgeURL)
+	chatSvc := chat.NewService(chatRepo, chatZalo)
+	chatH := chat.NewHandler(chatSvc)
 
 	api := r.Group("/api/v1")
 
@@ -189,7 +203,24 @@ func Setup(deps Deps) *gin.Engine {
 	// Dashboard
 	protected.GET("/dashboard/summary", dashH.Summary)
 	protected.GET("/dashboard/sales-funnel", dashH.SalesFunnel)
+	protected.GET("/dashboard/revenue-trend", dashH.RevenueTrend)
+	protected.GET("/dashboard/ticket-stats", dashH.TicketStats)
+	protected.GET("/dashboard/shipment-stats", dashH.ShipmentStats)
 	protected.GET("/dashboard/shipment-map", dashH.ShipmentMap)
+
+	// Omnichannel chat
+	protected.GET("/chat/accounts", chatH.ListAccounts)
+	protected.POST("/chat/accounts", chatH.CreateAccount)
+	protected.PUT("/chat/accounts/:id", chatH.UpdateAccount)
+	protected.DELETE("/chat/accounts/:id", chatH.DeleteAccount)
+	protected.POST("/chat/accounts/:id/zalo/qr", chatH.ZaloQRLogin)
+	protected.GET("/chat/accounts/:id/zalo/status", chatH.ZaloLoginStatus)
+	protected.GET("/chat/inbox", chatH.Inbox)
+	protected.GET("/chat/threads/:threadId", chatH.Thread)
+	protected.POST("/chat/send", chatH.Send)
+	protected.GET("/chat/conversations/:id", chatH.GetConversation)
+	protected.PUT("/chat/conversations/:id", chatH.UpdateConversation)
+	protected.GET("/chat/assignees", chatH.ListAssignees)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})

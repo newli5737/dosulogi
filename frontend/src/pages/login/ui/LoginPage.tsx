@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/app/providers/AuthProvider'
-import { LOGO_ALT, LOGO_SRC } from '@/shared/config/brand'
+import { COMPANY_NAME, COMPANY_TAGLINE, LOGO_ALT, LOGO_SRC } from '@/shared/config/brand'
 import './login-page.css'
 
 export function LoginPage() {
@@ -27,8 +27,8 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-hero">
         <img src={LOGO_SRC} alt={LOGO_ALT} className="login-logo" />
-        <h1>Dosu Logi</h1>
-        <p>Hệ thống quản lý logistics tích hợp CRM & ERP</p>
+        <h1>{COMPANY_NAME}</h1>
+        <p>{COMPANY_TAGLINE}</p>
         <ul>
           <li>Quản lý khách hàng & pipeline bán hàng</li>
           <li>Tracking vận đơn realtime</li>
