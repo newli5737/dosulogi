@@ -40,7 +40,7 @@ go build -o server ./cmd/server
 echo "==> Build frontend"
 if [[ -d frontend ]]; then
   cd frontend
-  npm ci
+  npm install
   npm run build
   cd "$APP_DIR"
 fi
