@@ -56,7 +56,11 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
 
 export async function httpBlob(path: string): Promise<Blob> {
   const res = await request(path)
-  if (!res.ok) throw new Error(res.statusText)
+  if (!res.ok) {
+    const json: unknown = await res.clone().json().catch(() => ({}))
+    const msg = getErrorMessage(json as ApiErrorResponse, res.statusText)
+    throw new Error(msg)
+  }
   return res.blob()
 }
 

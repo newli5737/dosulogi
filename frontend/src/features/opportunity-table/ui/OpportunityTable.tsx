@@ -6,8 +6,13 @@ import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { OpportunityModal } from '@/features/opportunity-modal/ui/OpportunityModal'
-
-import { OPPORTUNITY_STAGE_OPTIONS, opportunityStageLabel } from '@/shared/lib/labels'
+import {
+  isOpportunityClosed,
+  OPPORTUNITY_OUTCOME_OPTIONS,
+  OPPORTUNITY_PIPELINE_OPTIONS,
+  opportunityOutcomeLabel,
+  opportunityPipelineLabel,
+} from '@/shared/lib/labels'
 
 type OpportunityFilters = { stage: string }
 
@@ -19,7 +24,24 @@ export function OpportunityTable() {
     { key: 'code', label: 'Mã', render: (r) => r.code || '—' },
     { key: 'title', label: 'Tiêu đề' },
     { key: 'customer', label: 'Khách hàng', render: (r) => r.customer?.name || '—' },
-    { key: 'stage', label: 'Giai đoạn', render: (r) => <span className={`badge badge--${r.stage === 'won' ? 'gold' : 'open'}`}>{opportunityStageLabel(r.stage)}</span> },
+    {
+      key: 'stage',
+      label: 'Giai đoạn',
+      render: (r) => (
+        isOpportunityClosed(r.stage)
+          ? <span className="muted">—</span>
+          : <span className="badge badge--open">{opportunityPipelineLabel(r.stage)}</span>
+      ),
+    },
+    {
+      key: 'outcome',
+      label: 'Kết quả',
+      render: (r) => (
+        isOpportunityClosed(r.stage)
+          ? <span className={`badge badge--${r.stage === 'won' ? 'gold' : 'rose'}`}>{opportunityOutcomeLabel(r.stage)}</span>
+          : <span className="muted">Đang mở</span>
+      ),
+    },
     { key: 'value', label: 'Giá trị', render: (r) => r.value ? `${Number(r.value).toLocaleString('vi-VN')} ₫` : '—' },
     { key: 'expected_close', label: 'Dự kiến đóng', render: (r) => r.expected_close ? r.expected_close.slice(0, 10) : '—' },
     { key: '_actions', label: '', render: (r) => <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button> },
@@ -43,8 +65,13 @@ export function OpportunityTable() {
       </div>
       <div className="toolbar">
         <select className="field-input" value={stage} onChange={(e) => { setStage(e.target.value); setPage(1) }}>
-          <option value="">Tất cả giai đoạn</option>
-          {OPPORTUNITY_STAGE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          <option value="">Tất cả</option>
+          <optgroup label="Giai đoạn pipeline">
+            {OPPORTUNITY_PIPELINE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </optgroup>
+          <optgroup label="Kết quả chốt deal">
+            {OPPORTUNITY_OUTCOME_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </optgroup>
         </select>
       </div>
       <DataTable columns={columns} rows={rows} loading={loading} />

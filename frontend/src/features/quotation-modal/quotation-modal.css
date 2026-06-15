@@ -1,0 +1,80 @@
+.quote-modal__layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .quote-modal__layout { grid-template-columns: 1fr; }
+}
+
+.quote-modal__section {
+  margin: 0 0 12px;
+  font-size: .8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #64748b;
+}
+
+.quote-modal__note { grid-column: 1 / -1; }
+
+.quote-lines {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.quote-lines__head,
+.quote-lines__row {
+  display: grid;
+  grid-template-columns: 1fr 64px 120px 120px 40px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quote-lines__head {
+  font-size: .75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.quote-lines__amt {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.quote-summary {
+  position: sticky;
+  top: 0;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.quote-summary h4 { margin: 0 0 12px; font-size: .875rem; }
+
+.quote-summary__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: .875rem;
+  color: #475569;
+}
+
+.quote-summary__total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid #0f172a;
+  font-weight: 700;
+}
+
+.quote-summary__total strong { color: #2563eb; font-size: 1.0625rem; }

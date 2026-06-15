@@ -21,6 +21,7 @@
 }
 
 .modal-panel--wide { width: min(720px, 100%); }
+.modal-panel--xlarge { width: min(980px, 96vw); }
 
 .modal-header {
   display: flex;

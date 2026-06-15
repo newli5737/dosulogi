@@ -6,7 +6,7 @@ import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { CampaignModal } from '@/features/campaign-modal/ui/CampaignModal'
-import { campaignStatusLabel } from '@/shared/lib/labels'
+import { campaignStatusLabel, campaignTypeLabel } from '@/shared/lib/labels'
 import { CampaignLogsModal, CampaignScheduleModal } from '@/features/campaign-actions/ui/CampaignActionsModals'
 
 export function CampaignTable() {
@@ -22,7 +22,7 @@ export function CampaignTable() {
 
   const columns = useMemo<DataTableColumn<Campaign>[]>(() => [
     { key: 'name', label: 'Tên chiến dịch' },
-    { key: 'type', label: 'Loại' },
+    { key: 'type', label: 'Kênh', render: (r) => campaignTypeLabel(r.type) },
     { key: 'status', label: 'Trạng thái', render: (r) => campaignStatusLabel(r.status) },
     { key: 'sent_count', label: 'Đã gửi' },
     { key: 'scheduled_at', label: 'Lên lịch', render: (r) => r.scheduled_at ? r.scheduled_at.slice(0, 16).replace('T', ' ') : '—' },

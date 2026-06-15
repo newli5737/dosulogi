@@ -1,6 +1,6 @@
 import type { UUID } from '@/shared/api/types'
 
-export type ServiceType = 'FCL' | 'LCL' | 'air' | 'express' | 'road'
+export type ServiceType = 'FCL' | 'LCL' | 'air' | 'express' | 'road' | 'domestic' | 'cold_chain' | 'warehouse' | 'last_mile' | 'sea'
 export type ContractStatus = 'draft' | 'active' | 'expired' | 'terminated'
 
 export interface Contract {

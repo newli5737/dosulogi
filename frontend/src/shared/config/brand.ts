@@ -1,5 +1,6 @@
 export const LOGO_SRC = '/images/dosulogi.webp'
 export const LOGO_ALT = 'Dosu Logi'
+export const APP_NAME = 'DosuLogi'
 export const COMPANY_NAME = 'CÔNG TY TNHH THƯƠNG MẠI & DỊCH VỤ DOSU'
 export const COMPANY_TAGLINE = 'Đối tác công nghệ tin cậy, xây dựng giải pháp toàn diện từ ý tưởng đến sản phẩm hoàn thiện.'
 export const COMPANY_ADDRESS = 'Số 03, Ngách 72/59 Đường Tây Mỗ, Phường Tây Mỗ, TP Hà Nội'

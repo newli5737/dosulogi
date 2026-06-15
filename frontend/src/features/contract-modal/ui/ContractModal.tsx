@@ -4,7 +4,7 @@ import { Field, Input, Select } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
 import { contractApi } from '@/entities/contract/api/contractApi'
-import { CONTRACT_STATUS_OPTIONS } from '@/shared/lib/labels'
+import { CONTRACT_STATUS_OPTIONS, SERVICE_TYPE_OPTIONS } from '@/shared/lib/labels'
 import type { Contract, ContractStatus, ServiceType } from '@/entities/contract/model/types'
 
 interface ContractFormState {
@@ -24,7 +24,6 @@ const empty: ContractFormState = {
   value: '', currency: 'VND', status: 'draft', payment_terms: '',
 }
 
-const SERVICE_TYPES: ServiceType[] = ['FCL', 'LCL', 'air', 'express', 'road']
 
 interface ContractModalProps {
   open: boolean
@@ -118,7 +117,7 @@ export function ContractModal({ open, onClose, onSaved, edit }: ContractModalPro
           <Field label="Tiêu đề"><Input value={form.title} onChange={(e) => set('title', e.target.value)} /></Field>
           <Field label="Dịch vụ">
             <Select value={form.service_type} onChange={(e) => set('service_type', e.target.value as ServiceType)}>
-              {SERVICE_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {SERVICE_TYPE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </Select>
           </Field>
           <Field label="Trạng thái">

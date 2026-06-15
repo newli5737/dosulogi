@@ -3,6 +3,8 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"image"
+	"image/draw"
 	"image/png"
 	"math"
 	"os"
@@ -70,6 +72,13 @@ func initAssets() error {
 		filepath.Join(base, "internal", "util"),
 		filepath.Join(base, "..", "internal", "util"),
 	}
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		candidates = append(candidates,
+			filepath.Join(exeDir, "internal", "util"),
+			filepath.Join(exeDir, "..", "internal", "util"),
+		)
+	}
 	for _, c := range candidates {
 		if _, err := os.Stat(filepath.Join(c, "fonts", "NotoSans-Regular.ttf")); err == nil {
 			fontDir = filepath.Join(c, "fonts")
@@ -101,16 +110,50 @@ func ensureLogoPNG(assetsDir string) error {
 	if err != nil {
 		return err
 	}
+	b := img.Bounds()
+	rgba := image.NewRGBA(b)
+	draw.Draw(rgba, b, img, b.Min, draw.Src)
 	f, err := os.Create(pngPath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	if err := png.Encode(f, img); err != nil {
+	if err := png.Encode(f, rgba); err != nil {
 		return err
 	}
 	logoPNGPath = pngPath
 	return nil
+}
+
+func fontRelPath(name string) (string, error) {
+	base, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	abs := filepath.Join(fontDir, name)
+	if _, err := os.Stat(abs); err != nil {
+		return "", fmt.Errorf("font %s: %w", name, err)
+	}
+	rel, err := filepath.Rel(base, abs)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return filepath.ToSlash(abs), nil
+	}
+	return filepath.ToSlash(rel), nil
+}
+
+func assetRelPath(absPath string) string {
+	if absPath == "" {
+		return ""
+	}
+	base, err := os.Getwd()
+	if err != nil {
+		return absPath
+	}
+	rel, err := filepath.Rel(base, absPath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return absPath
+	}
+	return filepath.ToSlash(rel)
 }
 
 func GenerateInvoicePDF(data InvoicePDFData, outputDir, filename string) (string, error) {
@@ -125,20 +168,43 @@ func GenerateInvoicePDF(data InvoicePDFData, outputDir, filename string) (string
 	pdf.SetMargins(12, 12, 12)
 	pdf.AddPage()
 
-	pdf.AddUTF8Font("Noto", "", filepath.Join(fontDir, "NotoSans-Regular.ttf"))
-	pdf.AddUTF8Font("Noto", "B", filepath.Join(fontDir, "NotoSans-Bold.ttf"))
+	regular, err := fontRelPath("NotoSans-Regular.ttf")
+	if err != nil {
+		return "", err
+	}
+	bold, err := fontRelPath("NotoSans-Bold.ttf")
+	if err != nil {
+		return "", err
+	}
+	pdf.AddUTF8Font("Noto", "", regular)
+	pdf.AddUTF8Font("Noto", "B", bold)
 
-	// Logo + company block
+	// Quốc hiệu tiêu ngữ — trên cùng trang
+	pdf.SetY(10)
+	pdf.SetFont("Noto", "B", 10)
+	pdf.CellFormat(0, 5, "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "", 1, "C", false, 0, "")
+	pdf.SetFont("Noto", "B", 9)
+	pdf.CellFormat(0, 5, "Độc lập - Tự do - Hạnh phúc", "", 1, "C", false, 0, "")
+	pdf.Ln(4)
+
+	companyTop := pdf.GetY()
+
+	// Logo + thông tin công ty
 	if logoPNGPath != "" {
+		logoPath := assetRelPath(logoPNGPath)
 		if _, err := os.Stat(logoPNGPath); err == nil {
-			pdf.ImageOptions(logoPNGPath, 12, 10, 28, 0, false, gofpdf.ImageOptions{ImageType: "PNG"}, 0, "")
+			opts := gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
+			info := pdf.RegisterImageOptions(logoPath, opts)
+			if info != nil {
+				pdf.ImageOptions(logoPath, 12, companyTop, 28, 0, false, opts, 0, "")
+			}
 		}
 	}
 	pdf.SetFont("Noto", "B", 11)
-	pdf.SetXY(42, 10)
+	pdf.SetXY(42, companyTop)
 	pdf.Cell(0, 5, data.CompanyName)
 	pdf.SetFont("Noto", "", 8)
-	pdf.SetXY(42, 16)
+	pdf.SetXY(42, companyTop+6)
 	if data.CompanyTagline != "" {
 		pdf.MultiCell(156, 3.5, data.CompanyTagline, "", "L", false)
 	}
@@ -147,13 +213,8 @@ func GenerateInvoicePDF(data InvoicePDFData, outputDir, filename string) (string
 	pdf.MultiCell(156, 4, fmt.Sprintf("MST: %s\nĐịa chỉ: %s\nĐT: %s  Email: %s",
 		orDash(data.CompanyTaxCode), data.CompanyAddress, data.CompanyPhone, data.CompanyEmail), "", "L", false)
 
-	// National header
+	// Tiêu đề hóa đơn
 	pdf.SetY(pdf.GetY() + 4)
-	pdf.SetFont("Noto", "B", 10)
-	pdf.CellFormat(0, 5, "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "", 1, "C", false, 0, "")
-	pdf.SetFont("Noto", "", 9)
-	pdf.CellFormat(0, 5, "Độc lập - Tự do - Hạnh phúc", "", 1, "C", false, 0, "")
-	pdf.Ln(2)
 	pdf.SetFont("Noto", "B", 14)
 	pdf.CellFormat(0, 8, "HÓA ĐƠN GIÁ TRỊ GIA TĂNG", "", 1, "C", false, 0, "")
 	pdf.SetFont("Noto", "", 10)

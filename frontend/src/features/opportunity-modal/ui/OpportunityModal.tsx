@@ -7,7 +7,14 @@ import { opportunityApi } from '@/entities/opportunity/api/opportunityApi'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
 import type { Opportunity, StageHistoryEntry } from '@/entities/opportunity/model/types'
 import type { Shipment } from '@/entities/shipment/model/types'
-import { OPPORTUNITY_STAGE_OPTIONS, opportunityStageLabel, shipmentStatusLabel } from '@/shared/lib/labels'
+import {
+  isOpportunityClosed,
+  OPPORTUNITY_PIPELINE_OPTIONS,
+  opportunityOutcomeLabel,
+  opportunityPipelineLabel,
+  opportunityStageLabel,
+  shipmentStatusLabel,
+} from '@/shared/lib/labels'
 
 interface OpportunityFormState {
   customer_id: string
@@ -38,6 +45,8 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
   const [history, setHistory] = useState<StageHistoryEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const closed = isOpportunityClosed(form.stage)
 
   useEffect(() => {
     if (!open) return
@@ -80,24 +89,47 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
     }))
   }
 
+  async function saveBody(stageOverride?: string) {
+    const stage = stageOverride ?? form.stage
+    const body = {
+      customer_id: form.customer_id,
+      title: form.title,
+      stage,
+      currency: form.currency,
+      value: form.value ? Number(form.value) : null,
+      expected_close: form.expected_close || null,
+      lost_reason: stage === 'lost' ? (form.lost_reason || null) : null,
+      note: form.note || null,
+      shipment_ids: form.shipment_ids,
+    }
+    if (edit?.id) await opportunityApi.update(edit.id, body)
+    else await opportunityApi.create(body)
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
     try {
-      const body = {
-        customer_id: form.customer_id,
-        title: form.title,
-        stage: form.stage,
-        currency: form.currency,
-        value: form.value ? Number(form.value) : null,
-        expected_close: form.expected_close || null,
-        lost_reason: form.lost_reason || null,
-        note: form.note || null,
-        shipment_ids: form.shipment_ids,
-      }
-      if (edit?.id) await opportunityApi.update(edit.id, body)
-      else await opportunityApi.create(body)
+      await saveBody()
+      onSaved?.()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function closeDeal(outcome: 'won' | 'lost') {
+    if (outcome === 'lost' && !form.lost_reason.trim()) {
+      setError('Vui lòng nhập lý do bỏ cuộc')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      await saveBody(outcome)
       onSaved?.()
       onClose()
     } catch (err) {
@@ -115,20 +147,37 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
             <CustomerSelect value={form.customer_id} onChange={(v) => set('customer_id', v)} required />
           </Field>
           <Field label="Tiêu đề" required><Input value={form.title} onChange={(e) => set('title', e.target.value)} required /></Field>
-          <Field label="Giai đoạn">
-            <Select value={form.stage} onChange={(e) => set('stage', e.target.value)}>
-              {OPPORTUNITY_STAGE_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </Select>
-          </Field>
+
+          {closed ? (
+            <Field label="Kết quả">
+              <div className={`badge badge--${form.stage === 'won' ? 'gold' : 'rose'}`} style={{ display: 'inline-block' }}>
+                {opportunityOutcomeLabel(form.stage)}
+              </div>
+            </Field>
+          ) : (
+            <Field label="Giai đoạn pipeline">
+              <Select value={form.stage} onChange={(e) => set('stage', e.target.value)}>
+                {OPPORTUNITY_PIPELINE_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
           <Field label="Giá trị (VND)"><Input type="number" value={form.value} onChange={(e) => set('value', e.target.value)} /></Field>
           <Field label="Dự kiến đóng"><Input type="date" value={form.expected_close} onChange={(e) => set('expected_close', e.target.value)} /></Field>
           {form.stage === 'lost' && (
-            <Field label="Lý do thua"><Textarea value={form.lost_reason} onChange={(e) => set('lost_reason', e.target.value)} /></Field>
+            <Field label="Lý do bỏ cuộc"><Textarea value={form.lost_reason} onChange={(e) => set('lost_reason', e.target.value)} /></Field>
           )}
           <Field label="Ghi chú"><Textarea value={form.note} onChange={(e) => set('note', e.target.value)} /></Field>
         </div>
+
+        {!closed && edit?.id && (
+          <div className="form-actions" style={{ marginTop: 12, justifyContent: 'flex-start' }}>
+            <Button type="button" variant="primary" disabled={loading} onClick={() => void closeDeal('won')}>Chốt thắng</Button>
+            <Button type="button" variant="secondary" disabled={loading} onClick={() => void closeDeal('lost')}>Bỏ cuộc</Button>
+          </div>
+        )}
 
         <div style={{ margin: '16px 0' }}>
           <strong>Liên kết vận đơn</strong>
@@ -145,11 +194,13 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
 
         {edit && history.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <strong>Lịch sử giai đoạn</strong>
+            <strong>Lịch sử chuyển giai đoạn</strong>
             <ul className="stage-history">
               {history.map((h) => (
                 <li key={h.id}>
-                  {opportunityStageLabel(h.from_stage)} → <strong>{opportunityStageLabel(h.to_stage)}</strong>
+                  {h.from_stage ? opportunityPipelineLabel(h.from_stage) || opportunityStageLabel(h.from_stage) : '—'}
+                  {' → '}
+                  <strong>{opportunityPipelineLabel(h.to_stage) || opportunityOutcomeLabel(h.to_stage)}</strong>
                   {' · '}{h.changed_at.slice(0, 16).replace('T', ' ')}
                   {h.changer_name && ` · ${h.changer_name}`}
                 </li>
@@ -160,7 +211,7 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
 
         {error && <p className="form-error">{error}</p>}
         <div className="form-actions">
-          <Button variant="secondary" onClick={onClose}>Hủy</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>Hủy</Button>
           <Button type="submit" variant="primary" disabled={loading}>{loading ? 'Đang lưu...' : 'Lưu'}</Button>
         </div>
       </form>

@@ -21,7 +21,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
-import { COMPANY_NAME, COMPANY_TAGLINE, LOGO_ALT, LOGO_SRC } from '@/shared/config/brand'
+import { APP_NAME, LOGO_ALT, LOGO_SRC } from '@/shared/config/brand'
 import './app-shell.css'
 
 interface NavItem {
@@ -163,12 +163,7 @@ export function AppShell() {
         </button>
         <div className="shell-brand">
           <img src={LOGO_SRC} alt={LOGO_ALT} className="shell-logo-img" />
-          {!collapsed && (
-            <div>
-              <strong>{COMPANY_NAME}</strong>
-              <small>{COMPANY_TAGLINE}</small>
-            </div>
-          )}
+          {!collapsed && <strong className="shell-brand-name">{APP_NAME}</strong>}
         </div>
         <nav className="shell-nav">
           {visibleGroups.map((group) => (

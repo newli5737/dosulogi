@@ -41,6 +41,7 @@ a { color: var(--primary); text-decoration: none; }
 .badge--silver { background: #f1f5f9; color: #475569; }
 .badge--open { background: #dbeafe; color: #1e40af; }
 .badge--urgent { background: #fee2e2; color: #991b1b; }
+.badge--rose { background: #ffe4e6; color: #be123c; }
 
 .toolbar { margin-bottom: 16px; }
 .toolbar select { max-width: 200px; }

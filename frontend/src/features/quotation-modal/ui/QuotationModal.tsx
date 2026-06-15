@@ -1,10 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { FileText } from 'lucide-react'
 import { Modal } from '@/shared/ui/Modal/Modal'
-import { Field, Input } from '@/shared/ui/Form/Form'
+import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
+import { OpportunitySelect } from '@/shared/ui/OpportunitySelect/OpportunitySelect'
 import { quotationApi } from '@/entities/quotation/api/quotationApi'
 import type { Quotation } from '@/entities/quotation/model/types'
+import '../quotation-modal.css'
 
 interface LineItemForm {
   description: string
@@ -27,6 +30,10 @@ const emptyItem: LineItemForm = { description: '', qty: 1, unit_price: 0 }
 
 function calcSubtotal(items: LineItemForm[]): number {
   return items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0), 0)
+}
+
+function fmtVnd(n: number): string {
+  return `${n.toLocaleString('vi-VN')} ₫`
 }
 
 interface QuotationModalProps {
@@ -59,7 +66,11 @@ export function QuotationModal({ open, onClose, onSaved, edit }: QuotationModalP
         note: edit.note || '',
       })
     } else {
-      setForm({ customer_id: '', opportunity_id: '', items: [{ ...emptyItem }], currency: 'VND', valid_until: '', discount: 0, tax_rate: 10, note: '' })
+      setForm({
+        customer_id: '', opportunity_id: '', items: [{ ...emptyItem }], currency: 'VND',
+        valid_until: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+        discount: 0, tax_rate: 10, note: '',
+      })
     }
   }, [open, edit])
 
@@ -110,39 +121,81 @@ export function QuotationModal({ open, onClose, onSaved, edit }: QuotationModalP
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={edit ? 'Sửa báo giá' : 'Tạo báo giá'} wide>
+    <Modal open={open} onClose={onClose} title={edit ? 'Sửa báo giá' : 'Tạo báo giá'} wide icon={FileText} tone="blue">
       <form onSubmit={submit}>
-        <div className="form-grid">
-          <Field label="Khách hàng" required>
-            <CustomerSelect value={form.customer_id} onChange={(v) => setForm((f) => ({ ...f, customer_id: v }))} required />
-          </Field>
-          <Field label="Opportunity ID"><Input value={form.opportunity_id} onChange={(e) => setForm((f) => ({ ...f, opportunity_id: e.target.value }))} placeholder="UUID cơ hội (tuỳ chọn)" /></Field>
-          <Field label="Hết hạn"><Input type="date" value={form.valid_until} onChange={(e) => setForm((f) => ({ ...f, valid_until: e.target.value }))} /></Field>
-          <Field label="Giảm giá"><Input type="number" value={form.discount} onChange={(e) => setForm((f) => ({ ...f, discount: e.target.value }))} /></Field>
-          <Field label="Thuế (%)"><Input type="number" value={form.tax_rate} onChange={(e) => setForm((f) => ({ ...f, tax_rate: e.target.value }))} /></Field>
-        </div>
-        <div className="line-items">
-          <strong>Dòng hàng</strong>
-          {form.items.map((it, i) => (
-            <div key={i} className="line-item-row">
-              <Input placeholder="Mô tả" value={it.description} onChange={(e) => setItem(i, 'description', e.target.value)} />
-              <Input type="number" placeholder="SL" value={it.qty} onChange={(e) => setItem(i, 'qty', e.target.value)} style={{ width: 70 }} />
-              <Input type="number" placeholder="Đơn giá" value={it.unit_price} onChange={(e) => setItem(i, 'unit_price', e.target.value)} style={{ width: 120 }} />
-              {form.items.length > 1 && (
-                <Button variant="secondary" onClick={() => setForm((f) => ({ ...f, items: f.items.filter((_, j) => j !== i) }))}>×</Button>
-              )}
+        <div className="quote-modal__layout">
+          <div>
+            <h4 className="quote-modal__section">Thông tin báo giá</h4>
+            <div className="form-grid">
+              <Field label="Khách hàng" required>
+                <CustomerSelect
+                  value={form.customer_id}
+                  onChange={(v) => setForm((f) => ({ ...f, customer_id: v, opportunity_id: f.customer_id !== v ? '' : f.opportunity_id }))}
+                  required
+                />
+              </Field>
+              <Field label="Liên kết cơ hội">
+                <OpportunitySelect
+                  value={form.opportunity_id}
+                  customerId={form.customer_id}
+                  onChange={(v) => setForm((f) => ({ ...f, opportunity_id: v }))}
+                />
+              </Field>
+              <Field label="Hết hạn">
+                <Input type="date" value={form.valid_until} onChange={(e) => setForm((f) => ({ ...f, valid_until: e.target.value }))} />
+              </Field>
+              <Field label="Loại tiền">
+                <Select value={form.currency} onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}>
+                  <option value="VND">VND</option>
+                  <option value="USD">USD</option>
+                </Select>
+              </Field>
+              <Field label="Giảm giá (₫)">
+                <Input type="number" min={0} value={form.discount} onChange={(e) => setForm((f) => ({ ...f, discount: e.target.value }))} />
+              </Field>
+              <Field label="Thuế GTGT (%)">
+                <Input type="number" min={0} max={100} value={form.tax_rate} onChange={(e) => setForm((f) => ({ ...f, tax_rate: e.target.value }))} />
+              </Field>
+              <div className="quote-modal__note">
+                <Field label="Ghi chú nội bộ">
+                  <Textarea value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} rows={2} />
+                </Field>
+              </div>
             </div>
-          ))}
-          <Button variant="secondary" onClick={() => setForm((f) => ({ ...f, items: [...f.items, { ...emptyItem }] }))}>+ Dòng</Button>
-          <p className="line-total">
-            Tạm tính: {subtotal.toLocaleString('vi-VN')} ₫ · Thuế: {taxAmount.toLocaleString('vi-VN')} ₫ ·
-            <strong> Tổng: {total.toLocaleString('vi-VN')} ₫</strong>
-          </p>
+
+            <h4 className="quote-modal__section">Chi tiết dịch vụ</h4>
+            <div className="quote-lines">
+              <div className="quote-lines__head">
+                <span>Mô tả</span><span>SL</span><span>Đơn giá</span><span>Thành tiền</span><span />
+              </div>
+              {form.items.map((it, i) => (
+                <div key={i} className="quote-lines__row">
+                  <Input placeholder="Mô tả dịch vụ" value={it.description} onChange={(e) => setItem(i, 'description', e.target.value)} required />
+                  <Input type="number" min={1} value={it.qty} onChange={(e) => setItem(i, 'qty', e.target.value)} />
+                  <Input type="number" min={0} value={it.unit_price} onChange={(e) => setItem(i, 'unit_price', e.target.value)} />
+                  <span className="quote-lines__amt">{fmtVnd((Number(it.qty) || 0) * (Number(it.unit_price) || 0))}</span>
+                  {form.items.length > 1 && (
+                    <Button type="button" variant="secondary" onClick={() => setForm((f) => ({ ...f, items: f.items.filter((_, j) => j !== i) }))}>×</Button>
+                  )}
+                </div>
+              ))}
+              <Button type="button" variant="secondary" onClick={() => setForm((f) => ({ ...f, items: [...f.items, { ...emptyItem }] }))}>+ Thêm dòng</Button>
+            </div>
+          </div>
+
+          <aside className="quote-summary">
+            <h4>Tổng hợp</h4>
+            <div className="quote-summary__row"><span>Tạm tính</span><strong>{fmtVnd(subtotal)}</strong></div>
+            <div className="quote-summary__row"><span>Giảm giá</span><strong>-{fmtVnd(discount)}</strong></div>
+            <div className="quote-summary__row"><span>Thuế ({taxRate}%)</span><strong>{fmtVnd(taxAmount)}</strong></div>
+            <div className="quote-summary__total"><span>Tổng cộng</span><strong>{fmtVnd(total)}</strong></div>
+          </aside>
         </div>
+
         {error && <p className="form-error">{error}</p>}
         <div className="form-actions">
-          <Button variant="secondary" onClick={onClose}>Hủy</Button>
-          <Button type="submit" variant="primary" disabled={loading}>{loading ? 'Đang lưu...' : 'Lưu'}</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>Hủy</Button>
+          <Button type="submit" variant="primary" disabled={loading}>{loading ? 'Đang lưu...' : 'Lưu báo giá'}</Button>
         </div>
       </form>
     </Modal>

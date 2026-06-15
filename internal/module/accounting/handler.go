@@ -2,6 +2,7 @@ package accounting
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/dosu-logi/logistics-erp/internal/integration/sepay"
 	"github.com/dosu-logi/logistics-erp/internal/middleware"
@@ -98,13 +99,21 @@ func (h *Handler) CancelInvoice(c *gin.Context) {
 }
 
 func (h *Handler) DownloadInvoice(c *gin.Context) {
-	id, _ := uuid.Parse(c.Param("id"))
-	path, err := h.svc.DownloadInvoice(c.Request.Context(), id)
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		util.NotFound(c, "invoice not found")
+		util.BadRequest(c, "invalid invoice id")
 		return
 	}
-	c.File(path)
+	path, err := h.svc.DownloadInvoice(c.Request.Context(), id)
+	if err != nil {
+		if err.Error() == "invoice not found" {
+			util.NotFound(c, err.Error())
+			return
+		}
+		util.InternalError(c, err.Error())
+		return
+	}
+	c.FileAttachment(path, filepath.Base(path))
 }
 
 func (h *Handler) ListPayments(c *gin.Context) {

@@ -47,5 +47,36 @@
 .chat-acc-card__actions { display: flex; gap: 8px; }
 .chat-acc-empty { color: var(--text-muted); padding: 24px 0; }
 .hint { font-size: .875rem; color: var(--text-muted); }
+.chat-acc-cred { color: #15803d; font-weight: 600; }
+.chat-acc-cred--missing { color: #b45309; }
+
+.cookie-upload { position: relative; }
+.cookie-upload__input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.cookie-upload__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  text-align: center;
+  font-size: .875rem;
+  color: var(--text-muted);
+  transition: border-color .15s, background .15s;
+}
+.cookie-upload:hover .cookie-upload__box {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+.cookie-upload__box small { font-size: .75rem; opacity: .85; }
+
 .qr-wrap { text-align: center; }
 .qr-wrap img { max-width: 280px; border-radius: 12px; border: 1px solid var(--border); }

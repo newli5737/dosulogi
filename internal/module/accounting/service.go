@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -142,6 +143,19 @@ func (s *Service) generatePDF(ctx context.Context, inv *Invoice) error {
 			Plate:       plate,
 		}
 	}
+	subtotal, taxAmount, total := float64(0), float64(0), float64(0)
+	if inv.Subtotal != nil {
+		subtotal = *inv.Subtotal
+	}
+	if inv.TaxAmount != nil {
+		taxAmount = *inv.TaxAmount
+	}
+	if inv.Total != nil {
+		total = *inv.Total
+	}
+	if inv.Subtotal == nil && len(items) > 0 {
+		subtotal, taxAmount, total = calcInvoiceTotals(items, inv.TaxRate)
+	}
 	data := util.InvoicePDFData{
 		Code:       inv.Code,
 		Serial:     "DL/26E",
@@ -155,10 +169,10 @@ func (s *Service) generatePDF(ctx context.Context, inv *Invoice) error {
 		CompanyEmail:   s.company.Email,
 		CompanyTagline: s.company.Tagline,
 		Items:     pdfItems,
-		Subtotal:  *inv.Subtotal,
+		Subtotal:  subtotal,
 		TaxRate:   inv.TaxRate,
-		TaxAmount: *inv.TaxAmount,
-		Total:     *inv.Total,
+		TaxAmount: taxAmount,
+		Total:     total,
 		Currency:  inv.Currency,
 		Route:         route,
 		VehiclePlate:  plate,
@@ -182,13 +196,25 @@ func (s *Service) generatePDF(ctx context.Context, inv *Invoice) error {
 func (s *Service) DownloadInvoice(ctx context.Context, id uuid.UUID) (string, error) {
 	inv, err := s.repo.GetInvoice(ctx, id)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invoice not found")
+	}
+	needGen := inv.FileURL == nil || *inv.FileURL == ""
+	if !needGen {
+		if _, statErr := os.Stat(*inv.FileURL); statErr != nil {
+			needGen = true
+		}
+	}
+	if needGen {
+		if err := s.generatePDF(ctx, inv); err != nil {
+			return "", fmt.Errorf("generate pdf: %w", err)
+		}
+		inv, err = s.repo.GetInvoice(ctx, id)
+		if err != nil {
+			return "", fmt.Errorf("invoice not found")
+		}
 	}
 	if inv.FileURL == nil || *inv.FileURL == "" {
-		if err := s.generatePDF(ctx, inv); err != nil {
-			return "", err
-		}
-		inv, _ = s.repo.GetInvoice(ctx, id)
+		return "", fmt.Errorf("pdf not available")
 	}
 	return *inv.FileURL, nil
 }

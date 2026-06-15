@@ -10,15 +10,17 @@ interface ModalProps {
   title: string
   children: ReactNode
   wide?: boolean
+  xlarge?: boolean
   icon?: LucideIcon
   tone?: 'blue' | 'green' | 'amber' | 'rose' | 'violet' | 'cyan'
 }
 
-export function Modal({ open, onClose, title, children, wide, icon: Icon, tone = 'blue' }: ModalProps) {
+export function Modal({ open, onClose, title, children, wide, xlarge, icon: Icon, tone = 'blue' }: ModalProps) {
   if (!open) return null
+  const sizeClass = xlarge ? 'modal-panel--xlarge' : wide ? 'modal-panel--wide' : ''
   return createPortal(
     <div className="modal-backdrop" onClick={onClose} role="presentation">
-      <div className={`modal-panel ${wide ? 'modal-panel--wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className={`modal-panel ${sizeClass}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="modal-header">
           <div className="modal-header__title">
             {Icon && (
