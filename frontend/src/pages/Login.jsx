@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { login } from './api'
+import { login } from '../api'
 
 export default function LoginPage({ onSuccess }) {
   const [email, setEmail] = useState('admin@dosulogi.com')
