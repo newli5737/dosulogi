@@ -1,4 +1,4 @@
-export default function DataTable({ columns, rows, empty = 'Không có dữ liệu' }) {
+export function DataTable({ columns, rows, empty = 'Không có dữ liệu' }) {
   if (!rows?.length) return <p className="muted">{empty}</p>
   return (
     <div className="table-wrap">
