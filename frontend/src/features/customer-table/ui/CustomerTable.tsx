@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { customerApi } from '@/entities/customer/api/customerApi'
 import type { Customer } from '@/entities/customer/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
@@ -22,7 +23,14 @@ export function CustomerTable() {
     { key: 'email', label: 'Email' },
     { key: 'tier', label: 'Tier', render: (r) => <span className={`badge badge--${r.tier}`}>{r.tier}</span> },
     { key: 'assigned_to', label: 'Phụ trách', render: (r) => r.assigned_to?.full_name || '—' },
-    { key: '_actions', label: '', render: (r) => <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button> },
+    {
+      key: '_actions', label: '', render: (r) => (
+        <div className="row-actions">
+          <Link to={`/customers/${r.id}`}><Button variant="secondary">360°</Button></Link>
+          <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button>
+        </div>
+      ),
+    },
   ], [])
 
   const fetchPage = useCallback(

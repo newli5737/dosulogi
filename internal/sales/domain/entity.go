@@ -16,6 +16,7 @@ type LineItem struct {
 
 type Opportunity struct {
 	ID            uuid.UUID  `json:"id"`
+	Code          string     `json:"code"`
 	CustomerID    uuid.UUID  `json:"customer_id"`
 	Title         string     `json:"title"`
 	Stage         string     `json:"stage"`
@@ -24,9 +25,26 @@ type Opportunity struct {
 	ExpectedClose *time.Time `json:"expected_close"`
 	AssignedTo    *uuid.UUID `json:"assigned_to"`
 	LostReason    *string    `json:"lost_reason"`
+	Note          *string    `json:"note"`
 	CreatedBy     *uuid.UUID `json:"created_by"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
+	Customer      *struct {
+		ID   uuid.UUID `json:"id"`
+		Name string    `json:"name"`
+		Code string    `json:"code"`
+	} `json:"customer,omitempty"`
+	ShipmentIDs []uuid.UUID `json:"shipment_ids,omitempty"`
+}
+
+type StageHistoryEntry struct {
+	ID         uuid.UUID  `json:"id"`
+	FromStage  *string    `json:"from_stage"`
+	ToStage    string     `json:"to_stage"`
+	Note       *string    `json:"note"`
+	ChangedBy  *uuid.UUID `json:"changed_by"`
+	ChangedAt  time.Time  `json:"changed_at"`
+	ChangerName *string   `json:"changer_name,omitempty"`
 }
 
 type Contract struct {
@@ -69,12 +87,16 @@ type OpportunityFilter struct {
 }
 
 type OpportunityRepository interface {
+	NextCode(ctx context.Context) (string, error)
 	Create(ctx context.Context, o *Opportunity) error
 	List(ctx context.Context, f OpportunityFilter) ([]Opportunity, int, error)
 	Get(ctx context.Context, id uuid.UUID) (*Opportunity, error)
 	Update(ctx context.Context, o *Opportunity) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	InsertStageHistory(ctx context.Context, oppID uuid.UUID, fromStage, toStage string, changedBy *uuid.UUID) error
+	ListStageHistory(ctx context.Context, oppID uuid.UUID) ([]StageHistoryEntry, error)
+	GetShipmentIDs(ctx context.Context, oppID uuid.UUID) ([]uuid.UUID, error)
+	SetShipments(ctx context.Context, oppID uuid.UUID, ids []uuid.UUID) error
 }
 
 type ContractRepository interface {

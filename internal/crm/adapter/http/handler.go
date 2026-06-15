@@ -42,12 +42,105 @@ func (h *CustomerHandler) Get(c *gin.Context) {
 		httpx.BadRequest(c, "VALIDATION_ERROR", "invalid id")
 		return
 	}
-	item, err := h.svc.Get(c.Request.Context(), id)
+	item, err := h.svc.GetDetail(c.Request.Context(), id)
 	if err != nil {
 		httpx.NotFound(c, "NOT_FOUND", "customer not found")
 		return
 	}
 	httpx.OK(c, item)
+}
+
+func (h *CustomerHandler) ListContacts(c *gin.Context) {
+	customerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		httpx.BadRequest(c, "VALIDATION_ERROR", "invalid id")
+		return
+	}
+	items, err := h.svc.ListContacts(c.Request.Context(), customerID)
+	if err != nil {
+		httpx.Internal(c, err.Error())
+		return
+	}
+	httpx.OK(c, items)
+}
+
+func (h *CustomerHandler) CreateContact(c *gin.Context) {
+	customerID, _ := uuid.Parse(c.Param("id"))
+	var ct domain.Contact
+	if err := c.ShouldBindJSON(&ct); err != nil {
+		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
+		return
+	}
+	ct.CustomerID = customerID
+	item, err := h.svc.CreateContact(c.Request.Context(), &ct)
+	if err != nil {
+		mapErr(c, err)
+		return
+	}
+	httpx.Created(c, item)
+}
+
+func (h *CustomerHandler) UpdateContact(c *gin.Context) {
+	customerID, _ := uuid.Parse(c.Param("id"))
+	contactID, _ := uuid.Parse(c.Param("contact_id"))
+	var ct domain.Contact
+	if err := c.ShouldBindJSON(&ct); err != nil {
+		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
+		return
+	}
+	ct.ID = contactID
+	ct.CustomerID = customerID
+	item, err := h.svc.UpdateContact(c.Request.Context(), &ct)
+	if err != nil {
+		mapErr(c, err)
+		return
+	}
+	httpx.OK(c, item)
+}
+
+func (h *CustomerHandler) DeleteContact(c *gin.Context) {
+	customerID, _ := uuid.Parse(c.Param("id"))
+	contactID, _ := uuid.Parse(c.Param("contact_id"))
+	if err := h.svc.DeleteContact(c.Request.Context(), customerID, contactID); err != nil {
+		mapErr(c, err)
+		return
+	}
+	c.Status(204)
+}
+
+func (h *CustomerHandler) ListInteractions(c *gin.Context) {
+	customerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		httpx.BadRequest(c, "VALIDATION_ERROR", "invalid id")
+		return
+	}
+	page, limit, offset := httpx.ParsePageLimit(c)
+	f := domain.InteractionFilter{
+		Page: page, Limit: limit, Offset: offset,
+		CustomerID: customerID, Channel: c.Query("channel"),
+	}
+	items, total, err := h.svc.ListInteractions(c.Request.Context(), f)
+	if err != nil {
+		httpx.Internal(c, err.Error())
+		return
+	}
+	httpx.List(c, items, httpx.Meta{Page: page, Limit: limit, Total: total})
+}
+
+func (h *CustomerHandler) CreateInteraction(c *gin.Context) {
+	customerID, _ := uuid.Parse(c.Param("id"))
+	var req application.CreateInteractionInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
+		return
+	}
+	userID, _ := uuid.Parse(middleware.GetUserID(c))
+	item, err := h.svc.CreateInteraction(c.Request.Context(), customerID, req, userID)
+	if err != nil {
+		mapErr(c, err)
+		return
+	}
+	httpx.Created(c, item)
 }
 
 func (h *CustomerHandler) Create(c *gin.Context) {
@@ -153,12 +246,37 @@ func (h *TicketHandler) Update(c *gin.Context) {
 	httpx.OK(c, item)
 }
 
+func (h *TicketHandler) AddComment(c *gin.Context) {
+	id, _ := uuid.Parse(c.Param("id"))
+	var req struct {
+		Body       string `json:"body"`
+		IsInternal bool   `json:"is_internal"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
+		return
+	}
+	if req.Body == "" {
+		httpx.BadRequest(c, "VALIDATION_ERROR", "body required")
+		return
+	}
+	userID, _ := uuid.Parse(middleware.GetUserID(c))
+	item, err := h.svc.AddComment(c.Request.Context(), id, req.Body, req.IsInternal, userID)
+	if err != nil {
+		mapErr(c, err)
+		return
+	}
+	httpx.Created(c, item)
+}
+
 func mapErr(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, application.ErrValidation):
 		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
 	case errors.Is(err, application.ErrConflict):
 		httpx.Conflict(c, "CONFLICT", "email already exists")
+	case errors.Is(err, application.ErrPrimaryContact):
+		httpx.BadRequest(c, "VALIDATION_ERROR", "cannot delete primary contact when it is the only contact")
 	case errors.Is(err, application.ErrForbidden):
 		httpx.Forbidden(c, "insufficient permissions")
 	case errors.Is(err, application.ErrNotFound), errors.Is(err, pgx.ErrNoRows):

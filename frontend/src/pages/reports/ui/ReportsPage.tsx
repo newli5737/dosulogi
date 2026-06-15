@@ -2,19 +2,26 @@ import { useEffect, useState } from 'react'
 import { reportApi, type ARReportRow, type RevenueReportRow } from '@/entities/session/api/sessionApi'
 import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
+import { Button } from '@/shared/ui/Button/Button'
 
 export function ReportsPage() {
   const token = useToken()
   const [revenue, setRevenue] = useState<RevenueReportRow[]>([])
   const [ar, setAr] = useState<ARReportRow[]>([])
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
-  useEffect(() => {
+  function load() {
     if (!token) return
-    reportApi.revenue(token).then((d) => setRevenue(Array.isArray(d) ? d : [])).catch(console.error)
+    const fromIso = from ? new Date(from).toISOString() : undefined
+    const toIso = to ? new Date(to).toISOString() : undefined
+    reportApi.revenue(token, fromIso, toIso).then((d) => setRevenue(Array.isArray(d) ? d : [])).catch(console.error)
     reportApi.ar(token).then((d) => setAr(Array.isArray(d) ? d : [])).catch(console.error)
-  }, [token])
+  }
 
-  const revenueColumns: DataTableColumn<RevenueReportRow>[]= [
+  useEffect(() => { load() }, [token])
+
+  const revenueColumns: DataTableColumn<RevenueReportRow>[] = [
     { key: 'label', label: 'Kỳ' },
     { key: 'amount', label: 'Doanh thu', render: (r) => `${Number(r.amount || 0).toLocaleString('vi-VN')} ₫` },
   ]
@@ -28,6 +35,11 @@ export function ReportsPage() {
   return (
     <div className="page-card">
       <div className="page-header"><h1>Báo cáo kế toán</h1></div>
+      <div className="toolbar" style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+        <label>Từ <input className="field-input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+        <label>Đến <input className="field-input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+        <Button variant="primary" onClick={load}>Lọc doanh thu</Button>
+      </div>
       <h2 className="section-title">Doanh thu theo tháng</h2>
       <DataTable<RevenueReportRow & { id?: string }> columns={revenueColumns} rows={revenue} empty="Chưa có doanh thu" />
       <h2 className="section-title">Công nợ (AR)</h2>

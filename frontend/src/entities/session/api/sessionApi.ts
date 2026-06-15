@@ -31,6 +31,8 @@ export const authApi = {
     http('/api/v1/auth/login', { method: 'POST', body }),
   me: (token: string): Promise<UserBrief> =>
     http('/api/v1/auth/me', { token }),
+  changePassword: (token: string, body: { old_password: string; new_password: string }): Promise<{ message: string }> =>
+    http('/api/v1/auth/me/password', { token, method: 'PUT', body }),
 }
 
 export const dashboardApi = {
@@ -41,8 +43,13 @@ export const dashboardApi = {
 }
 
 export const reportApi = {
-  revenue: (token: string): Promise<RevenueReportRow[]> =>
-    http('/api/v1/reports/revenue', { token }),
+  revenue: (token: string, from?: string, to?: string): Promise<RevenueReportRow[]> => {
+    const q = new URLSearchParams()
+    if (from) q.set('from', from)
+    if (to) q.set('to', to)
+    const qs = q.toString()
+    return http(`/api/v1/reports/revenue${qs ? `?${qs}` : ''}`, { token })
+  },
   ar: (token: string): Promise<ARReportRow[]> =>
     http('/api/v1/reports/ar', { token }),
 }

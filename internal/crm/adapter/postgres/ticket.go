@@ -95,7 +95,16 @@ func (r *TicketRepo) Create(ctx context.Context, t *domain.Ticket) error {
 }
 
 func (r *TicketRepo) Update(ctx context.Context, t *domain.Ticket) error {
-	_, err := r.db.Exec(ctx, `UPDATE tickets SET status=$1,priority=$2,assigned_to=$3,sla_deadline=$4,updated_at=now() WHERE id=$5`, t.Status, t.Priority, t.AssignedTo, t.SLADeadline, t.ID)
+	resolved := "NULL"
+	closed := "NULL"
+	if t.Status == "resolved" {
+		resolved = "COALESCE(resolved_at, now())"
+	}
+	if t.Status == "closed" {
+		closed = "COALESCE(closed_at, now())"
+	}
+	q := fmt.Sprintf(`UPDATE tickets SET status=$1,priority=$2,assigned_to=$3,sla_deadline=$4,resolved_at=%s,closed_at=%s,updated_at=now() WHERE id=$5`, resolved, closed)
+	_, err := r.db.Exec(ctx, q, t.Status, t.Priority, t.AssignedTo, t.SLADeadline, t.ID)
 	return err
 }
 

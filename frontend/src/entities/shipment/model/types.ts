@@ -7,7 +7,21 @@ export interface Shipment {
   origin?: string | null
   destination?: string | null
   estimated_delivery?: string | null
+  actual_delivery?: string | null
+  last_synced_at?: string | null
   customer_id?: UUID | null
+  lat?: number | null
+  lng?: number | null
+}
+
+export interface ShipmentEvent {
+  id: UUID
+  shipment_id: UUID
+  status?: string | null
+  description?: string | null
+  location?: string | null
+  event_time?: string | null
+  created_at: string
 }
 
 export interface ShipmentInput {

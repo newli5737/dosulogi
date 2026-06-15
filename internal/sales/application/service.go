@@ -31,10 +31,25 @@ func (s *OpportunityService) Get(ctx context.Context, id uuid.UUID) (*domain.Opp
 	return s.repo.Get(ctx, id)
 }
 
-func (s *OpportunityService) Create(ctx context.Context, o *domain.Opportunity) error {
+func (s *OpportunityService) ListStageHistory(ctx context.Context, id uuid.UUID) ([]domain.StageHistoryEntry, error) {
+	return s.repo.ListStageHistory(ctx, id)
+}
+
+type CreateOpportunityInput struct {
+	domain.Opportunity
+	ShipmentIDs []uuid.UUID `json:"shipment_ids"`
+}
+
+func (s *OpportunityService) Create(ctx context.Context, in *CreateOpportunityInput) error {
+	o := &in.Opportunity
 	if o.Title == "" || o.CustomerID == uuid.Nil {
 		return ErrValidation
 	}
+	code, err := s.repo.NextCode(ctx)
+	if err != nil {
+		return err
+	}
+	o.Code = code
 	if o.Stage == "" {
 		o.Stage = "lead"
 	}
@@ -44,10 +59,16 @@ func (s *OpportunityService) Create(ctx context.Context, o *domain.Opportunity) 
 	if o.AssignedTo == nil {
 		o.AssignedTo = o.CreatedBy
 	}
-	return s.repo.Create(ctx, o)
+	if err := s.repo.Create(ctx, o); err != nil {
+		return err
+	}
+	if len(in.ShipmentIDs) > 0 {
+		return s.repo.SetShipments(ctx, o.ID, in.ShipmentIDs)
+	}
+	return nil
 }
 
-func (s *OpportunityService) Update(ctx context.Context, o *domain.Opportunity, changedBy uuid.UUID) error {
+func (s *OpportunityService) Update(ctx context.Context, o *domain.Opportunity, shipmentIDs []uuid.UUID, changedBy uuid.UUID) error {
 	existing, err := s.repo.Get(ctx, o.ID)
 	if err != nil {
 		return err
@@ -58,7 +79,13 @@ func (s *OpportunityService) Update(ctx context.Context, o *domain.Opportunity, 
 			return err
 		}
 	}
-	return s.repo.Update(ctx, o)
+	if err := s.repo.Update(ctx, o); err != nil {
+		return err
+	}
+	if shipmentIDs != nil {
+		return s.repo.SetShipments(ctx, o.ID, shipmentIDs)
+	}
+	return nil
 }
 
 func (s *OpportunityService) Delete(ctx context.Context, id uuid.UUID) error {

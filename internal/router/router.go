@@ -14,7 +14,6 @@ import (
 	"github.com/dosu-logi/logistics-erp/internal/middleware"
 	"github.com/dosu-logi/logistics-erp/internal/module/accounting"
 	"github.com/dosu-logi/logistics-erp/internal/module/auth"
-	"github.com/dosu-logi/logistics-erp/internal/module/crm"
 	"github.com/dosu-logi/logistics-erp/internal/module/dashboard"
 	"github.com/dosu-logi/logistics-erp/internal/module/marketing"
 	"github.com/dosu-logi/logistics-erp/internal/module/tracking"
@@ -47,15 +46,12 @@ func Setup(deps Deps) *gin.Engine {
 	authSvc := auth.NewService(authRepo, deps.JWT)
 	authH := auth.NewHandler(authSvc)
 
-	crmRepo := crm.NewRepository(deps.DB)
-	crmSvc := crm.NewService(crmRepo)
-	crmH := crm.NewHandler(crmSvc)
-
 	custRepo := crmrepo.NewCustomerRepo(deps.DB)
 	contactRepo := crmrepo.NewContactRepo(deps.DB)
+	interactionRepo := crmrepo.NewInteractionRepo(deps.DB)
 	ticketRepo := crmrepo.NewTicketRepo(deps.DB)
 	ticketCommentRepo := crmrepo.NewTicketCommentRepo(deps.DB)
-	custSvc := crmapp.NewCustomerService(custRepo, contactRepo)
+	custSvc := crmapp.NewCustomerService(custRepo, contactRepo, interactionRepo)
 	ticketSvc := crmapp.NewTicketService(ticketRepo, ticketCommentRepo)
 	custHex := crmhttp.NewCustomerHandler(custSvc)
 	ticketHex := crmhttp.NewTicketHandler(ticketSvc)
@@ -126,12 +122,13 @@ func Setup(deps Deps) *gin.Engine {
 	protected.POST("/tickets", ticketHex.Create)
 	protected.GET("/tickets/:id", ticketHex.Get)
 	protected.PUT("/tickets/:id", ticketHex.Update)
-	protected.GET("/customers/:id/contacts", crmH.ListContacts)
-	protected.POST("/customers/:id/contacts", crmH.CreateContact)
-	protected.PUT("/customers/:id/contacts/:contact_id", crmH.UpdateContact)
-	protected.DELETE("/customers/:id/contacts/:contact_id", crmH.DeleteContact)
-	protected.GET("/customers/:id/interactions", crmH.ListInteractions)
-	protected.POST("/customers/:id/interactions", crmH.CreateInteraction)
+	protected.POST("/tickets/:id/comments", ticketHex.AddComment)
+	protected.GET("/customers/:id/contacts", custHex.ListContacts)
+	protected.POST("/customers/:id/contacts", custHex.CreateContact)
+	protected.PUT("/customers/:id/contacts/:contact_id", custHex.UpdateContact)
+	protected.DELETE("/customers/:id/contacts/:contact_id", custHex.DeleteContact)
+	protected.GET("/customers/:id/interactions", custHex.ListInteractions)
+	protected.POST("/customers/:id/interactions", custHex.CreateInteraction)
 	protected.GET("/customers/:id/shipments", trackH.ListByCustomer)
 	protected.GET("/customers/:id/invoices", acctH.ListByCustomer)
 	protected.GET("/customers/:id/contracts", listContractsByCustomer(contractSvc))
@@ -142,6 +139,7 @@ func Setup(deps Deps) *gin.Engine {
 	protected.GET("/opportunities/:id", oppHex.Get)
 	protected.PUT("/opportunities/:id", oppHex.Update)
 	protected.DELETE("/opportunities/:id", oppHex.Delete)
+	protected.GET("/opportunities/:id/stage-history", oppHex.StageHistory)
 
 	protected.GET("/contracts", contractHex.List)
 	protected.POST("/contracts", contractHex.Create)

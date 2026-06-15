@@ -9,8 +9,26 @@ export interface Ticket {
   priority: string
   status: string
   category?: string | null
-  customer?: { name: string }
+  assigned_to?: UUID | null
+  assigned_user?: UserBrief | null
+  customer?: { id?: UUID; name: string; code?: string }
   is_overdue?: boolean
+  sla_deadline?: string | null
+  created_at?: string
+}
+
+export interface TicketComment {
+  id: UUID
+  ticket_id: UUID
+  body: string
+  is_internal: boolean
+  created_by?: UserBrief | null
+  created_at: string
+}
+
+export interface TicketDetail {
+  ticket: Ticket
+  comments: TicketComment[]
 }
 
 export interface CreateTicketInput {
@@ -19,4 +37,15 @@ export interface CreateTicketInput {
   description?: string | null
   priority: string
   category?: string | null
+}
+
+export interface UpdateTicketInput {
+  status?: string
+  priority?: string
+  assigned_to?: UUID | null
+}
+
+export interface AddCommentInput {
+  body: string
+  is_internal?: boolean
 }

@@ -5,6 +5,7 @@ import { AppShell } from '@/widgets/app-shell/ui/AppShell'
 import { LoginPage } from '@/pages/login/ui/LoginPage'
 import { DashboardPage } from '@/pages/dashboard/ui/DashboardPage'
 import { CustomersPage } from '@/pages/customers/ui/CustomersPage'
+import { CustomerDetailPage } from '@/pages/customer-detail/ui/CustomerDetailPage'
 import { TicketsPage } from '@/pages/tickets/ui/TicketsPage'
 import { OpportunitiesPage } from '@/pages/opportunities/ui/OpportunitiesPage'
 import { ContractsPage } from '@/pages/contracts/ui/ContractsPage'
@@ -16,6 +17,7 @@ import { UsersPage } from '@/pages/users/ui/UsersPage'
 import { ShipmentMapPage } from '@/pages/shipment-map/ui/ShipmentMapPage'
 import { InvoicesPage } from '@/pages/invoices/ui/InvoicesPage'
 import { PaymentsPage } from '@/pages/payments/ui/PaymentsPage'
+import { ProfilePage } from '@/pages/profile/ui/ProfilePage'
 
 function Guard({ children }: { children: ReactNode }) {
   const { session, checking } = useAuth()
@@ -38,6 +40,7 @@ function AppRouter() {
       <Route element={<Guard><AppShell /></Guard>}>
         <Route index element={<DashboardPage />} />
         <Route path="customers" element={<CustomersPage />} />
+        <Route path="customers/:id" element={<CustomerDetailPage />} />
         <Route path="tickets" element={<TicketsPage />} />
         <Route path="opportunities" element={<OpportunitiesPage />} />
         <Route path="contracts" element={<ContractsPage />} />
@@ -49,6 +52,7 @@ function AppRouter() {
         <Route path="campaigns" element={<CampaignsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

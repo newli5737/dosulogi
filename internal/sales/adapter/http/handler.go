@@ -36,18 +36,18 @@ func (h *OpportunityHandler) List(c *gin.Context) {
 }
 
 func (h *OpportunityHandler) Create(c *gin.Context) {
-	var o domain.Opportunity
-	if err := c.ShouldBindJSON(&o); err != nil {
+	var req application.CreateOpportunityInput
+	if err := c.ShouldBindJSON(&req); err != nil {
 		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
 		return
 	}
 	userID, _ := uuid.Parse(middleware.GetUserID(c))
-	o.CreatedBy = &userID
-	if err := h.svc.Create(c.Request.Context(), &o); err != nil {
+	req.CreatedBy = &userID
+	if err := h.svc.Create(c.Request.Context(), &req); err != nil {
 		mapErr(c, err)
 		return
 	}
-	httpx.Created(c, o)
+	httpx.Created(c, req.Opportunity)
 }
 
 func (h *OpportunityHandler) Get(c *gin.Context) {
@@ -62,18 +62,31 @@ func (h *OpportunityHandler) Get(c *gin.Context) {
 
 func (h *OpportunityHandler) Update(c *gin.Context) {
 	id, _ := uuid.Parse(c.Param("id"))
-	var o domain.Opportunity
-	if err := c.ShouldBindJSON(&o); err != nil {
+	var req struct {
+		domain.Opportunity
+		ShipmentIDs []uuid.UUID `json:"shipment_ids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
 		httpx.BadRequest(c, "VALIDATION_ERROR", err.Error())
 		return
 	}
-	o.ID = id
+	req.ID = id
 	userID, _ := uuid.Parse(middleware.GetUserID(c))
-	if err := h.svc.Update(c.Request.Context(), &o, userID); err != nil {
+	if err := h.svc.Update(c.Request.Context(), &req.Opportunity, req.ShipmentIDs, userID); err != nil {
 		mapErr(c, err)
 		return
 	}
-	httpx.OK(c, o)
+	httpx.OK(c, req.Opportunity)
+}
+
+func (h *OpportunityHandler) StageHistory(c *gin.Context) {
+	id, _ := uuid.Parse(c.Param("id"))
+	items, err := h.svc.ListStageHistory(c.Request.Context(), id)
+	if err != nil {
+		httpx.Internal(c, err.Error())
+		return
+	}
+	httpx.OK(c, items)
 }
 
 func (h *OpportunityHandler) Delete(c *gin.Context) {

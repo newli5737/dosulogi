@@ -136,3 +136,15 @@ func (r *CustomerRepo) EmailExists(ctx context.Context, email string, excludeID 
 func (r *CustomerRepo) NextCode(ctx context.Context) (string, error) {
 	return codegen.Next(ctx, r.db, "customers", "KH", false)
 }
+
+func (r *CustomerRepo) CountOpenTickets(ctx context.Context, customerID uuid.UUID) (int, error) {
+	var n int
+	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM tickets WHERE customer_id=$1 AND status NOT IN ('resolved','closed')`, customerID).Scan(&n)
+	return n, err
+}
+
+func (r *CustomerRepo) CountActiveContracts(ctx context.Context, customerID uuid.UUID) (int, error) {
+	var n int
+	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM contracts WHERE customer_id=$1 AND status='active'`, customerID).Scan(&n)
+	return n, err
+}

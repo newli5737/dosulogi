@@ -7,10 +7,13 @@ import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { CampaignModal } from '@/features/campaign-modal/ui/CampaignModal'
+import { CampaignLogsModal, CampaignScheduleModal } from '@/features/campaign-actions/ui/CampaignActionsModals'
 
 export function CampaignTable() {
   const token = useToken()
   const [modal, setModal] = useState<Campaign | Record<string, never> | null>(null)
+  const [scheduleId, setScheduleId] = useState<string | null>(null)
+  const [logsCampaign, setLogsCampaign] = useState<Campaign | null>(null)
 
   const fetchPage = useCallback(
     (page: number, limit: number) => campaignApi.list(token!, page, limit),
@@ -23,13 +26,18 @@ export function CampaignTable() {
     { key: 'type', label: 'Loại' },
     { key: 'status', label: 'Trạng thái' },
     { key: 'sent_count', label: 'Đã gửi' },
+    { key: 'scheduled_at', label: 'Lên lịch', render: (r) => r.scheduled_at ? r.scheduled_at.slice(0, 16).replace('T', ' ') : '—' },
     {
       key: '_actions', label: '', render: (r) => (
         <div className="row-actions">
           <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button>
           {r.status === 'draft' && token && (
-            <Button variant="primary" onClick={async () => { await campaignApi.send(token, r.id); reload() }}>Gửi</Button>
+            <>
+              <Button variant="secondary" onClick={() => setScheduleId(r.id)}>Lên lịch</Button>
+              <Button variant="primary" onClick={async () => { await campaignApi.send(token, r.id); reload() }}>Gửi</Button>
+            </>
           )}
+          <Button variant="secondary" onClick={() => setLogsCampaign(r)}>Logs</Button>
         </div>
       ),
     },
@@ -48,6 +56,18 @@ export function CampaignTable() {
         edit={modal && 'id' in modal && modal.id ? (modal as Campaign) : null}
         onClose={() => setModal(null)}
         onSaved={reload}
+      />
+      <CampaignScheduleModal
+        open={scheduleId !== null}
+        campaignId={scheduleId}
+        onClose={() => setScheduleId(null)}
+        onSaved={reload}
+      />
+      <CampaignLogsModal
+        open={logsCampaign !== null}
+        campaignId={logsCampaign?.id ?? null}
+        campaignName={logsCampaign?.name}
+        onClose={() => setLogsCampaign(null)}
       />
     </>
   )

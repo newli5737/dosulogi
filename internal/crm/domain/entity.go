@@ -47,6 +47,38 @@ type CustomerRepository interface {
 	SoftDelete(ctx context.Context, id uuid.UUID) error
 	EmailExists(ctx context.Context, email string, excludeID *uuid.UUID) (bool, error)
 	NextCode(ctx context.Context) (string, error)
+	CountOpenTickets(ctx context.Context, customerID uuid.UUID) (int, error)
+	CountActiveContracts(ctx context.Context, customerID uuid.UUID) (int, error)
+}
+
+type CustomerDetail struct {
+	Customer
+	PrimaryContact  *Contact `json:"primary_contact"`
+	OpenTickets     int      `json:"open_tickets"`
+	ActiveContracts int      `json:"active_contracts"`
+}
+
+type Interaction struct {
+	ID         uuid.UUID  `json:"id"`
+	CustomerID uuid.UUID  `json:"customer_id"`
+	Channel    string     `json:"channel"`
+	Direction  *string    `json:"direction"`
+	Summary    string     `json:"summary"`
+	OccurredAt time.Time  `json:"occurred_at"`
+	CreatedBy  *UserBrief `json:"created_by"`
+	CreatedAt  time.Time  `json:"created_at"`
+}
+
+type InteractionFilter struct {
+	Page, Limit, Offset int
+	CustomerID          uuid.UUID
+	Channel             string
+}
+
+type InteractionRepository interface {
+	List(ctx context.Context, f InteractionFilter) ([]Interaction, int, error)
+	Create(ctx context.Context, i *Interaction, createdBy uuid.UUID) error
+	TouchLastContact(ctx context.Context, customerID uuid.UUID, at time.Time) error
 }
 
 type Contact struct {

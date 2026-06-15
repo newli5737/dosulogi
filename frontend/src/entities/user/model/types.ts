@@ -14,3 +14,9 @@ export interface CreateUserInput {
   full_name: string
   role: string
 }
+
+export interface UpdateUserInput {
+  full_name?: string
+  role?: string
+  is_active?: boolean
+}

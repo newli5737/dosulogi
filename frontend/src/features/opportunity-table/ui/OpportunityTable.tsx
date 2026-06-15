@@ -18,7 +18,9 @@ export function OpportunityTable() {
   const [modal, setModal] = useState<Opportunity | Record<string, never> | null>(null)
 
   const columns = useMemo<DataTableColumn<Opportunity>[]>(() => [
+    { key: 'code', label: 'Mã', render: (r) => r.code || '—' },
     { key: 'title', label: 'Tiêu đề' },
+    { key: 'customer', label: 'Khách hàng', render: (r) => r.customer?.name || '—' },
     { key: 'stage', label: 'Stage', render: (r) => <span className={`badge badge--${r.stage === 'won' ? 'gold' : 'open'}`}>{r.stage}</span> },
     { key: 'value', label: 'Giá trị', render: (r) => r.value ? `${Number(r.value).toLocaleString('vi-VN')} ₫` : '—' },
     { key: 'expected_close', label: 'Dự kiến đóng', render: (r) => r.expected_close ? r.expected_close.slice(0, 10) : '—' },

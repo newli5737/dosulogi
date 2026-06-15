@@ -54,7 +54,7 @@ export function AppShell() {
         <header className="shell-topbar">
           <div />
           <div className="shell-user">
-            <span>{session.user.full_name}</span>
+            <NavLink to="/profile" className="shell-profile">{session.user.full_name}</NavLink>
             <small>{session.user.role}</small>
             <button type="button" className="shell-logout" onClick={logout}>Đăng xuất</button>
           </div>

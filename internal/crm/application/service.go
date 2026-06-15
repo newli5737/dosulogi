@@ -18,12 +18,13 @@ var (
 )
 
 type CustomerService struct {
-	customers domain.CustomerRepository
-	contacts  domain.ContactRepository
+	customers    domain.CustomerRepository
+	contacts     domain.ContactRepository
+	interactions domain.InteractionRepository
 }
 
-func NewCustomerService(c domain.CustomerRepository, ct domain.ContactRepository) *CustomerService {
-	return &CustomerService{customers: c, contacts: ct}
+func NewCustomerService(c domain.CustomerRepository, ct domain.ContactRepository, i domain.InteractionRepository) *CustomerService {
+	return &CustomerService{customers: c, contacts: ct, interactions: i}
 }
 
 type CreateCustomerInput struct {
@@ -46,6 +47,51 @@ func (s *CustomerService) List(ctx context.Context, f domain.CustomerFilter) ([]
 
 func (s *CustomerService) Get(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
 	return s.customers.Get(ctx, id)
+}
+
+func (s *CustomerService) GetDetail(ctx context.Context, id uuid.UUID) (*domain.CustomerDetail, error) {
+	c, err := s.customers.Get(ctx, id)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+	detail := &domain.CustomerDetail{Customer: *c}
+	contacts, _ := s.contacts.ListByCustomer(ctx, id)
+	for _, ct := range contacts {
+		if ct.IsPrimary {
+			cp := ct
+			detail.PrimaryContact = &cp
+			break
+		}
+	}
+	detail.OpenTickets, _ = s.customers.CountOpenTickets(ctx, id)
+	detail.ActiveContracts, _ = s.customers.CountActiveContracts(ctx, id)
+	return detail, nil
+}
+
+func (s *CustomerService) ListInteractions(ctx context.Context, f domain.InteractionFilter) ([]domain.Interaction, int, error) {
+	return s.interactions.List(ctx, f)
+}
+
+type CreateInteractionInput struct {
+	Channel    string     `json:"channel"`
+	Direction  *string    `json:"direction"`
+	Summary    string     `json:"summary"`
+	OccurredAt *time.Time `json:"occurred_at"`
+}
+
+func (s *CustomerService) CreateInteraction(ctx context.Context, customerID uuid.UUID, in CreateInteractionInput, userID uuid.UUID) (*domain.Interaction, error) {
+	if in.Channel == "" || in.Summary == "" {
+		return nil, ErrValidation
+	}
+	it := &domain.Interaction{CustomerID: customerID, Channel: in.Channel, Direction: in.Direction, Summary: in.Summary}
+	if in.OccurredAt != nil {
+		it.OccurredAt = *in.OccurredAt
+	}
+	if err := s.interactions.Create(ctx, it, userID); err != nil {
+		return nil, err
+	}
+	_ = s.interactions.TouchLastContact(ctx, customerID, it.OccurredAt)
+	return it, nil
 }
 
 func (s *CustomerService) Create(ctx context.Context, in CreateCustomerInput) (*domain.Customer, error) {
