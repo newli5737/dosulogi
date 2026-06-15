@@ -67,7 +67,7 @@ func Paginated(c *gin.Context, items interface{}, page, limit, total int) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": items,
-		"pagination": Pagination{
+		"meta": Pagination{
 			Page:  page,
 			Limit: limit,
 			Total: total,

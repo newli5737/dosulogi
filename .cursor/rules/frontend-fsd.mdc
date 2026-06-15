@@ -1,0 +1,34 @@
+---
+description: Frontend FSD layer rules
+globs: frontend/src/**/*
+alwaysApply: false
+---
+
+# Frontend FSD
+
+```
+app/       → providers, router, global styles
+pages/     → route entry, thin composition
+widgets/   → layout shell, dashboard blocks
+features/  → modals, filters, actions (customer-modal, ticket-form)
+entities/  → customer/api.ts, customer/types.ts
+shared/ui/ → Modal, Pagination, DataTable, Input, Button
+shared/api/→ http client, parseMeta
+```
+
+## Modal pattern
+```tsx
+// features/customer-modal/ui/CustomerModal.tsx
+// Uses shared/ui/Modal – fixed overlay, z-index 1000
+<Modal open={open} onClose={onClose} title="Thêm khách hàng">
+  <CustomerForm onSuccess={onClose} />
+</Modal>
+```
+
+## Pagination
+- Use `usePaginatedQuery(entityApi.list, filters)` hook in feature layer.
+- Page component only: `<CustomerPage />` renders `<CustomerTable />` + `<CustomerModal />`.
+
+## Styling
+- CSS variables in `app/styles/variables.css`.
+- No inline styles except dynamic values.

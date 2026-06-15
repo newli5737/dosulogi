@@ -1,0 +1,33 @@
+---
+description: Global architecture rules – FSD frontend, hexagonal backend, no bloat
+alwaysApply: true
+---
+
+# Dosu Logi Architecture (mandatory)
+
+## Backend – Hexagonal
+- Structure per domain: `internal/{domain}/domain|application|adapter/http|adapter/postgres`
+- `domain/`: entities + port interfaces only. No gin, no sql, no json tags on entities if avoidable (use DTOs in adapter/http).
+- `application/`: use cases, business rules. Depends only on domain ports.
+- `adapter/http/`: handlers, request/response DTOs, gin bindings.
+- `adapter/postgres/`: repository implementations.
+- NEVER import adapter from domain or application.
+- Max ~200 lines per file; split by use case not by layer dump.
+- API list response: `{ "data": [], "meta": { "page", "limit", "total" } }`.
+- API error: `{ "error": { "code": "...", "message": "..." } }`.
+
+## Frontend – FSD
+- Layers (import only downward): `app → pages → widgets → features → entities → shared`
+- `pages/`: compose widgets/features only; NO fetch logic, NO form state.
+- `features/`: user actions (modal forms, filters); may use entities API.
+- `entities/`: types + api functions per entity.
+- `shared/ui/`: dumb components (Modal, Table, Pagination, Button).
+- Modals: always overlay via portal; never inline forms in list pages.
+- Lists: always paginated server-side (`page`, `limit`); never load all records.
+- One component file = one responsibility; extract hooks to `features/*/model/` or `entities/*/model/`.
+
+## Forbidden
+- Logic + UI mixed in page components.
+- Handler calling SQL directly.
+- New dependencies without clear need.
+- Duplicating API client code outside `shared/api`.

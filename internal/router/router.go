@@ -1,6 +1,9 @@
 package router
 
 import (
+	crmapp "github.com/dosu-logi/logistics-erp/internal/crm/application"
+	crmhttp "github.com/dosu-logi/logistics-erp/internal/crm/adapter/http"
+	crmrepo "github.com/dosu-logi/logistics-erp/internal/crm/adapter/postgres"
 	"github.com/dosu-logi/logistics-erp/internal/config"
 	"github.com/dosu-logi/logistics-erp/internal/integration/mailer"
 	"github.com/dosu-logi/logistics-erp/internal/integration/tracking3p"
@@ -43,6 +46,15 @@ func Setup(deps Deps) *gin.Engine {
 	crmRepo := crm.NewRepository(deps.DB)
 	crmSvc := crm.NewService(crmRepo)
 	crmH := crm.NewHandler(crmSvc)
+
+	custRepo := crmrepo.NewCustomerRepo(deps.DB)
+	contactRepo := crmrepo.NewContactRepo(deps.DB)
+	ticketRepo := crmrepo.NewTicketRepo(deps.DB)
+	ticketCommentRepo := crmrepo.NewTicketCommentRepo(deps.DB)
+	custSvc := crmapp.NewCustomerService(custRepo, contactRepo)
+	ticketSvc := crmapp.NewTicketService(ticketRepo, ticketCommentRepo)
+	custHex := crmhttp.NewCustomerHandler(custSvc)
+	ticketHex := crmhttp.NewTicketHandler(ticketSvc)
 
 	salesRepo := sales.NewRepository(deps.DB)
 	salesSvc := sales.NewService(salesRepo, mailer, deps.Config.UploadDir)
@@ -93,12 +105,16 @@ func Setup(deps Deps) *gin.Engine {
 	users.PUT("/:id", authH.UpdateUser)
 	users.DELETE("/:id", authH.DeleteUser)
 
-	// CRM
-	protected.GET("/customers", crmH.List)
-	protected.POST("/customers", crmH.Create)
-	protected.GET("/customers/:id", crmH.Get)
-	protected.PUT("/customers/:id", crmH.Update)
-	protected.DELETE("/customers/:id", crmH.Delete)
+	// CRM (hexagonal customers + tickets)
+	protected.GET("/customers", custHex.List)
+	protected.POST("/customers", custHex.Create)
+	protected.GET("/customers/:id", custHex.Get)
+	protected.PUT("/customers/:id", custHex.Update)
+	protected.DELETE("/customers/:id", custHex.Delete)
+	protected.GET("/tickets", ticketHex.List)
+	protected.POST("/tickets", ticketHex.Create)
+	protected.GET("/tickets/:id", ticketHex.Get)
+	protected.PUT("/tickets/:id", ticketHex.Update)
 	protected.GET("/customers/:id/contacts", crmH.ListContacts)
 	protected.POST("/customers/:id/contacts", crmH.CreateContact)
 	protected.PUT("/customers/:id/contacts/:contact_id", crmH.UpdateContact)

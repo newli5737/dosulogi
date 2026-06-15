@@ -1,0 +1,27 @@
+---
+description: Backend hexagonal architecture per domain
+globs: internal/**/*
+alwaysApply: false
+---
+
+# Hexagonal Backend
+
+## Package layout (per domain: crm, sales, auth…)
+```
+internal/crm/
+  domain/customer.go      # entity + CustomerRepository interface
+  application/customer.go # CustomerService use cases
+  adapter/http/customer.go
+  adapter/postgres/customer.go
+```
+
+## Rules
+- Application services receive ports via constructor injection.
+- Business logic (SLA, stage transition, quotation calc) lives in application/.
+- Code generation: use `application/codegen.go` GenerateCode(prefix, withYear).
+- Soft delete customers: `is_active = false`.
+- Stage changes: always write `opportunity_stage_history`.
+
+## Router wiring
+- `internal/router/router.go` only registers adapter/http handlers.
+- Do not add new files under deprecated `internal/module/` – migrate to hexagonal.
