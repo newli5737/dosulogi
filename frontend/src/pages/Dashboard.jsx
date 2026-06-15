@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSalesFunnel, getSummary, paginatedItems } from '../api'
+import { getSalesFunnel, getSummary, asArray } from '../api'
 import { Page, useToken } from '../components/ui'
 
 export default function DashboardPage() {
@@ -9,7 +9,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     getSummary(token).then(setSummary).catch(console.error)
-    getSalesFunnel(token).then(setFunnel).catch(console.error)
+    getSalesFunnel(token).then((d) => setFunnel(asArray(d))).catch(console.error)
   }, [token])
 
   return (

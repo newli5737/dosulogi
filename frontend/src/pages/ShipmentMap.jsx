@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { getShipmentMap } from '../api'
+import { getShipmentMap, asArray } from '../api'
 import { Page, useToken } from '../components/ui'
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -17,17 +17,18 @@ export default function ShipmentMapPage() {
   const [points, setPoints] = useState([])
 
   useEffect(() => {
-    getShipmentMap(token).then(setPoints).catch(console.error)
+    getShipmentMap(token).then((d) => setPoints(asArray(d))).catch(console.error)
   }, [token])
 
-  const center = points[0] ? [points[0].lat, points[0].lng] : [16.0544, 108.2022]
+  const list = asArray(points)
+  const center = list[0] ? [list[0].lat, list[0].lng] : [16.0544, 108.2022]
 
   return (
     <Page title="Bản đồ vận đơn (Leaflet / OSM)">
       <div className="map-box">
         <MapContainer center={center} zoom={6} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
           <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {points.map((p) => (
+          {list.map((p) => (
             <Marker key={p.tracking_code} position={[p.lat, p.lng]}>
               <Popup>
                 <strong>{p.tracking_code}</strong><br />

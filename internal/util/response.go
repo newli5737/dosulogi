@@ -3,6 +3,7 @@ package util
 import (
 	"math"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -60,6 +61,10 @@ func InternalError(c *gin.Context, msg string) {
 }
 
 func Paginated(c *gin.Context, items interface{}, page, limit, total int) {
+	v := reflect.ValueOf(items)
+	if v.Kind() == reflect.Slice && v.IsNil() {
+		items = reflect.MakeSlice(v.Type(), 0, 0).Interface()
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": items,
 		"pagination": Pagination{

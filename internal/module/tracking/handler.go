@@ -68,7 +68,7 @@ func (h *Handler) ListEvents(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func (h *Handler) Sync(c *gin.Context) {
@@ -111,7 +111,7 @@ func (h *Handler) ListByCustomer(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func verifyHMAC(body []byte, sig, secret string) bool {

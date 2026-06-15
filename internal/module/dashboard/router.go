@@ -32,7 +32,7 @@ func (r *Router) SalesFunnel(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func (r *Router) ShipmentMap(c *gin.Context) {
@@ -41,8 +41,5 @@ func (r *Router) ShipmentMap(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	if items == nil {
-		items = []tracking.MapPoint{}
-	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }

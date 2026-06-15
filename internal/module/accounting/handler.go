@@ -154,7 +154,7 @@ func (h *Handler) RevenueReport(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func (h *Handler) ARReport(c *gin.Context) {
@@ -163,7 +163,7 @@ func (h *Handler) ARReport(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func (h *Handler) ListByCustomer(c *gin.Context) {
@@ -173,5 +173,5 @@ func (h *Handler) ListByCustomer(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }

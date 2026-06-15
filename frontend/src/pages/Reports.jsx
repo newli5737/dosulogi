@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getARReport, getRevenueReport } from '../api'
+import { getARReport, getRevenueReport, asArray } from '../api'
 import { DataTable, Page, useToken } from '../components/ui'
 
 export default function ReportsPage() {
@@ -8,8 +8,8 @@ export default function ReportsPage() {
   const [ar, setAr] = useState([])
 
   useEffect(() => {
-    getRevenueReport(token).then(setRevenue).catch(console.error)
-    getARReport(token).then(setAr).catch(console.error)
+    getRevenueReport(token).then((d) => setRevenue(asArray(d))).catch(console.error)
+    getARReport(token).then((d) => setAr(asArray(d))).catch(console.error)
   }, [token])
 
   return (

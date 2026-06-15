@@ -48,6 +48,12 @@ export const sendCampaign = (token, id) => request(`/api/v1/campaigns/${id}/send
 
 export const listUsers = (token) => request('/api/v1/users?limit=50', token)
 
+export function asArray(value) {
+  if (Array.isArray(value)) return value
+  if (value && Array.isArray(value.data)) return value.data
+  return []
+}
+
 export function paginatedItems(res) {
-  return res.data ?? res
+  return asArray(res?.data ?? res)
 }

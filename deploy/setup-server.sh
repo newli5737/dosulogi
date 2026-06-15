@@ -34,8 +34,12 @@ sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'test1234';" || true
 chmod +x deploy/deploy.sh
 bash deploy/deploy.sh
 
-echo "==> Certbot SSL"
-certbot --nginx -d api-logi.dosutech.site -d logi.dosutech.site --non-interactive --agree-tos -m admin@dosutech.site --redirect || echo "Certbot failed - check DNS first"
+echo "==> Certbot SSL (skip if cert exists)"
+if [ ! -f /etc/letsencrypt/live/api-logi.dosutech.site/fullchain.pem ]; then
+  certbot --nginx -d api-logi.dosutech.site -d logi.dosutech.site --non-interactive --agree-tos -m admin@dosutech.site --redirect
+else
+  echo "SSL cert already present"
+fi
 
 systemctl status dosulogi --no-pager || true
 curl -s http://127.0.0.1:8089/health || true

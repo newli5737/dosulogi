@@ -18,18 +18,27 @@ import UsersPage from './pages/Users'
 
 function AppRoutes() {
   const [session, setSession] = useState(null)
+  const [checking, setChecking] = useState(!!localStorage.getItem('access_token'))
   const token = localStorage.getItem('access_token')
 
   useEffect(() => {
-    if (!token) return
+    if (!token) {
+      setChecking(false)
+      return
+    }
     getMe(token)
       .then((user) => setSession({ user, access_token: token }))
       .catch(() => localStorage.removeItem('access_token'))
+      .finally(() => setChecking(false))
   }, [token])
 
   function logout() {
     localStorage.removeItem('access_token')
     setSession(null)
+  }
+
+  if (checking) {
+    return <div className="login-wrap"><div className="card">Đang tải...</div></div>
   }
 
   if (!session) {

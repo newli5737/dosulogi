@@ -1,5 +1,8 @@
+import { asArray } from '../api'
+
 export function DataTable({ columns, rows, empty = 'Không có dữ liệu' }) {
-  if (!rows?.length) return <p className="muted">{empty}</p>
+  const list = asArray(rows)
+  if (!list.length) return <p className="muted">{empty}</p>
   return (
     <div className="table-wrap">
       <table>
@@ -7,7 +10,7 @@ export function DataTable({ columns, rows, empty = 'Không có dữ liệu' }) {
           <tr>{columns.map((c) => <th key={c.key}>{c.label}</th>)}</tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
+          {list.map((row, i) => (
             <tr key={row.id || i}>
               {columns.map((c) => <td key={c.key}>{c.render ? c.render(row) : row[c.key] ?? '—'}</td>)}
             </tr>

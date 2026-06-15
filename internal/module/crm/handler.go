@@ -106,7 +106,7 @@ func (h *Handler) ListContacts(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func (h *Handler) CreateContact(c *gin.Context) {
@@ -157,7 +157,7 @@ func (h *Handler) ListInteractions(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-	util.JSON(c, http.StatusOK, items)
+	util.JSONList(c, http.StatusOK, items)
 }
 
 func (h *Handler) CreateInteraction(c *gin.Context) {
