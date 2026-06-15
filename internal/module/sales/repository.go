@@ -106,6 +106,13 @@ func (r *Repository) UpdateOpportunity(ctx context.Context, o *Opportunity) erro
 	return err
 }
 
+func (r *Repository) InsertStageHistory(ctx context.Context, oppID uuid.UUID, fromStage, toStage string, changedBy *uuid.UUID) error {
+	_, err := r.db.Exec(ctx, `
+		INSERT INTO opportunity_stage_history (opportunity_id, from_stage, to_stage, changed_by)
+		VALUES ($1, $2, $3, $4)`, oppID, fromStage, toStage, changedBy)
+	return err
+}
+
 func (r *Repository) DeleteOpportunity(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.Exec(ctx, `DELETE FROM opportunities WHERE id=$1`, id)
 	return err

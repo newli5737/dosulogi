@@ -5,7 +5,15 @@ import { LoginPage } from '../pages/login/ui/LoginPage'
 import { DashboardPage } from '../pages/dashboard/ui/DashboardPage'
 import { CustomersPage } from '../pages/customers/ui/CustomersPage'
 import { TicketsPage } from '../pages/tickets/ui/TicketsPage'
-import { OpportunitiesPage, ContractsPage, QuotationsPage, InvoicesPage, PaymentsPage, ShipmentsPage, CampaignsPage } from '../pages/sales/ui/SalesPages'
+import { OpportunitiesPage } from '../pages/opportunities/ui/OpportunitiesPage'
+import { ContractsPage } from '../pages/contracts/ui/ContractsPage'
+import { QuotationsPage } from '../pages/quotations/ui/QuotationsPage'
+import { ShipmentsPage } from '../pages/shipments/ui/ShipmentsPage'
+import { CampaignsPage } from '../pages/campaigns/ui/CampaignsPage'
+import { ReportsPage } from '../pages/reports/ui/ReportsPage'
+import { UsersPage } from '../pages/users/ui/UsersPage'
+import { ShipmentMapPage } from '../pages/shipment-map/ui/ShipmentMapPage'
+import { InvoicesPage, PaymentsPage } from '../pages/sales/ui/SalesPages'
 
 function Guard({ children }) {
   const { session, checking } = useAuth()
@@ -35,7 +43,10 @@ function AppRouter() {
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="shipments" element={<ShipmentsPage />} />
+        <Route path="shipment-map" element={<ShipmentMapPage />} />
         <Route path="campaigns" element={<CampaignsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="users" element={<UsersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

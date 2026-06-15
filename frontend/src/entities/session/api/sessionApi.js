@@ -18,22 +18,7 @@ export const invoiceApi = {
   list: (token, page, limit) => http(`/api/v1/invoices?page=${page}&limit=${limit}`, { token }),
 }
 
-export const opportunityApi = {
-  list: (token, page, limit) => http(`/api/v1/opportunities?page=${page}&limit=${limit}`, { token }),
-}
-
-export const contractApi = {
-  list: (token, page, limit) => http(`/api/v1/contracts?page=${page}&limit=${limit}`, { token }),
-}
-
-export const quotationApi = {
-  list: (token, page, limit) => http(`/api/v1/quotations?page=${page}&limit=${limit}`, { token }),
-}
-
-export const shipmentApi = {
-  list: (token, page, limit) => http(`/api/v1/shipments?page=${page}&limit=${limit}`, { token }),
-}
-
-export const campaignApi = {
-  list: (token, page, limit) => http(`/api/v1/campaigns?page=${page}&limit=${limit}`, { token }),
+export const reportApi = {
+  revenue: (token) => http('/api/v1/reports/revenue', { token }),
+  ar: (token) => http('/api/v1/reports/ar', { token }),
 }

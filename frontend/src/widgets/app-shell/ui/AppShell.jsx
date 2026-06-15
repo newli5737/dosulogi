@@ -10,13 +10,18 @@ const nav = [
   { to: '/quotations', label: 'Báo giá', icon: '▣' },
   { to: '/contracts', label: 'Hợp đồng', icon: '▤' },
   { to: '/shipments', label: 'Vận đơn', icon: '⬡' },
+  { to: '/shipment-map', label: 'Bản đồ', icon: '⊕' },
   { to: '/invoices', label: 'Hóa đơn', icon: '▥' },
   { to: '/payments', label: 'Thanh toán', icon: '▦' },
+  { to: '/reports', label: 'Báo cáo', icon: '▧' },
   { to: '/campaigns', label: 'Marketing', icon: '◐' },
+  { to: '/users', label: 'Users', icon: '◉', admin: true },
 ]
 
 export function AppShell() {
   const { session, logout } = useAuth()
+  const isAdmin = session.user.role === 'admin'
+
   return (
     <div className="shell">
       <aside className="shell-sidebar">
@@ -28,7 +33,7 @@ export function AppShell() {
           </div>
         </div>
         <nav className="shell-nav">
-          {nav.map((item) => (
+          {nav.filter((item) => !item.admin || isAdmin).map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => `shell-link ${isActive ? 'active' : ''}`}>
               <span className="shell-icon">{item.icon}</span>
               {item.label}

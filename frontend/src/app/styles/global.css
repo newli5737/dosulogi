@@ -41,3 +41,16 @@ a { color: var(--primary); text-decoration: none; }
 .badge--silver { background: #f1f5f9; color: #475569; }
 .badge--open { background: #dbeafe; color: #1e40af; }
 .badge--urgent { background: #fee2e2; color: #991b1b; }
+
+.toolbar { margin-bottom: 16px; }
+.toolbar select { max-width: 200px; }
+
+.section-title { font-size: 1rem; margin: 24px 0 12px; color: var(--text-muted); }
+
+.row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.form-error { color: var(--danger); font-size: .875rem; margin-top: 8px; }
+
+.line-items { margin: 16px 0; }
+.line-item-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.line-total { margin-top: 8px; font-weight: 600; color: var(--primary); }

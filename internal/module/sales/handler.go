@@ -64,7 +64,8 @@ func (h *Handler) UpdateOpportunity(c *gin.Context) {
 		return
 	}
 	o.ID = id
-	if err := h.svc.UpdateOpportunity(c.Request.Context(), &o); err != nil {
+	userID, _ := uuid.Parse(middleware.GetUserID(c))
+	if err := h.svc.UpdateOpportunity(c.Request.Context(), &o, userID); err != nil {
 		util.InternalError(c, err.Error())
 		return
 	}

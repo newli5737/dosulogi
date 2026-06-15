@@ -45,7 +45,17 @@ func (s *Service) GetOpportunity(ctx context.Context, id uuid.UUID) (*Opportunit
 	return s.repo.GetOpportunity(ctx, id)
 }
 
-func (s *Service) UpdateOpportunity(ctx context.Context, o *Opportunity) error {
+func (s *Service) UpdateOpportunity(ctx context.Context, o *Opportunity, changedBy uuid.UUID) error {
+	existing, err := s.repo.GetOpportunity(ctx, o.ID)
+	if err != nil {
+		return err
+	}
+	if existing.Stage != o.Stage {
+		cb := changedBy
+		if err := s.repo.InsertStageHistory(ctx, o.ID, existing.Stage, o.Stage, &cb); err != nil {
+			return err
+		}
+	}
 	return s.repo.UpdateOpportunity(ctx, o)
 }
 
