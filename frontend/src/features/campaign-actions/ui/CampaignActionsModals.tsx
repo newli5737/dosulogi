@@ -4,7 +4,6 @@ import { Field, Input } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { campaignApi } from '@/entities/campaign/api/campaignApi'
 import type { CampaignLog } from '@/entities/campaign/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { parseMeta } from '@/shared/api/types'
@@ -17,20 +16,19 @@ interface CampaignLogsModalProps {
 }
 
 export function CampaignLogsModal({ open, campaignId, campaignName, onClose }: CampaignLogsModalProps) {
-  const token = useToken()
   const [rows, setRows] = useState<CampaignLog[]>([])
   const [page, setPage] = useState(1)
   const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0 })
 
   useEffect(() => {
-    if (!open || !token || !campaignId) return
-    campaignApi.logs(token, campaignId, page, 20)
+    if (!open || !campaignId) return
+    campaignApi.logs(campaignId, page, 20)
       .then((res) => {
         setRows(Array.isArray(res.data) ? res.data : [])
         setMeta(parseMeta(res, page, 20))
       })
       .catch(console.error)
-  }, [open, token, campaignId, page])
+  }, [open, campaignId, page])
 
   const columns: DataTableColumn<CampaignLog>[] = [
     { key: 'email', label: 'Email', render: (r) => r.email || '—' },
@@ -54,17 +52,16 @@ interface CampaignScheduleModalProps {
 }
 
 export function CampaignScheduleModal({ open, campaignId, onClose, onSaved }: CampaignScheduleModalProps) {
-  const token = useToken()
   const [at, setAt] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function submit() {
-    if (!token || !campaignId || !at) return
+    if (!campaignId || !at) return
     setLoading(true)
     setError('')
     try {
-      await campaignApi.schedule(token, campaignId, new Date(at).toISOString())
+      await campaignApi.schedule(campaignId, new Date(at).toISOString())
       onSaved?.()
       onClose()
     } catch (err) {

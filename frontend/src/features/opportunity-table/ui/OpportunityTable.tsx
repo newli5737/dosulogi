@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react'
 import { opportunityApi } from '@/entities/opportunity/api/opportunityApi'
 import type { Opportunity } from '@/entities/opportunity/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
@@ -13,7 +12,6 @@ const STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost'] a
 type OpportunityFilters = { stage: string }
 
 export function OpportunityTable() {
-  const token = useToken()
   const [stage, setStage] = useState('')
   const [modal, setModal] = useState<Opportunity | Record<string, never> | null>(null)
 
@@ -28,8 +26,8 @@ export function OpportunityTable() {
   ], [])
 
   const fetchPage = useCallback(
-    (page: number, limit: number, filters: OpportunityFilters) => opportunityApi.list(token!, page, limit, filters),
-    [token],
+    (page: number, limit: number, filters: OpportunityFilters) => opportunityApi.list(page, limit, filters),
+    [],
   )
 
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Opportunity, OpportunityFilters>(

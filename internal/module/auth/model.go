@@ -31,8 +31,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken string    `json:"access_token"`
-	User        UserBrief `json:"user"`
+	User UserBrief `json:"user"`
 }
 
 type UserBrief struct {

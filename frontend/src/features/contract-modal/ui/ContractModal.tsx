@@ -5,7 +5,6 @@ import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
 import { contractApi } from '@/entities/contract/api/contractApi'
 import type { Contract, ContractStatus, ServiceType } from '@/entities/contract/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface ContractFormState {
   customer_id: string
@@ -35,7 +34,6 @@ interface ContractModalProps {
 }
 
 export function ContractModal({ open, onClose, onSaved, edit }: ContractModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<ContractFormState>(empty)
   const [fileUrl, setFileUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -68,11 +66,11 @@ export function ContractModal({ open, onClose, onSaved, edit }: ContractModalPro
 
   async function handleFileUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !token || !edit?.id) return
+    if (!file || !edit?.id) return
     setUploading(true)
     setError('')
     try {
-      const updated = await contractApi.upload(token, edit.id, file)
+      const updated = await contractApi.upload(edit.id, file)
       setFileUrl(updated.file_url ?? null)
       onSaved?.()
     } catch (err) {
@@ -85,7 +83,6 @@ export function ContractModal({ open, onClose, onSaved, edit }: ContractModalPro
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
@@ -100,8 +97,8 @@ export function ContractModal({ open, onClose, onSaved, edit }: ContractModalPro
         status: form.status,
         payment_terms: form.payment_terms || null,
       }
-      if (edit?.id) await contractApi.update(token, edit.id, body)
-      else await contractApi.create(token, body)
+      if (edit?.id) await contractApi.update(edit.id, body)
+      else await contractApi.create(body)
       onSaved?.()
       onClose()
     } catch (err) {

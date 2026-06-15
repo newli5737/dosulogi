@@ -44,10 +44,14 @@ func (j *JWTManager) SignAccess(userID, role string) (string, error) {
 }
 
 func (j *JWTManager) SignRefresh(userID string) (string, error) {
+	return j.SignRefreshWithTTL(userID, j.refreshTTL)
+}
+
+func (j *JWTManager) SignRefreshWithTTL(userID string, ttl time.Duration) (string, error) {
 	claims := TokenClaims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.refreshTTL)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
@@ -78,6 +82,10 @@ func (j *JWTManager) parse(tokenStr string, secret []byte) (*TokenClaims, error)
 
 func (j *JWTManager) RefreshTTL() time.Duration {
 	return j.refreshTTL
+}
+
+func (j *JWTManager) AccessTTL() time.Duration {
+	return j.accessTTL
 }
 
 func HashToken(token string) string {

@@ -5,7 +5,6 @@ import { Button } from '@/shared/ui/Button/Button'
 import { ticketApi } from '@/entities/ticket/api/ticketApi'
 import { customerApi } from '@/entities/customer/api/customerApi'
 import type { Customer } from '@/entities/customer/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface TicketFormState {
   customer_id: string
@@ -24,25 +23,23 @@ interface TicketModalProps {
 }
 
 export function TicketModal({ open, onClose, onSaved }: TicketModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<TicketFormState>(empty)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!open || !token) return
+    if (!open) return
     setForm(empty)
-    customerApi.list(token, 1, 100).then((res) => setCustomers(res.data || [])).catch(() => setCustomers([]))
-  }, [open, token])
+    customerApi.list(1, 100).then((res) => setCustomers(res.data || [])).catch(() => setCustomers([]))
+  }, [open])
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
-      await ticketApi.create(token, { ...form, description: form.description || null })
+      await ticketApi.create({ ...form, description: form.description || null })
       onSaved?.()
       onClose()
     } catch (err) {

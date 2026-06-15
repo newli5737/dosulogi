@@ -1,25 +1,22 @@
 import { useEffect, useState } from 'react'
 import { reportApi, type ARReportRow, type RevenueReportRow } from '@/entities/session/api/sessionApi'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Button } from '@/shared/ui/Button/Button'
 
 export function ReportsPage() {
-  const token = useToken()
   const [revenue, setRevenue] = useState<RevenueReportRow[]>([])
   const [ar, setAr] = useState<ARReportRow[]>([])
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
   function load() {
-    if (!token) return
     const fromIso = from ? new Date(from).toISOString() : undefined
     const toIso = to ? new Date(to).toISOString() : undefined
-    reportApi.revenue(token, fromIso, toIso).then((d) => setRevenue(Array.isArray(d) ? d : [])).catch(console.error)
-    reportApi.ar(token).then((d) => setAr(Array.isArray(d) ? d : [])).catch(console.error)
+    reportApi.revenue(fromIso, toIso).then((d) => setRevenue(Array.isArray(d) ? d : [])).catch(console.error)
+    reportApi.ar().then((d) => setAr(Array.isArray(d) ? d : [])).catch(console.error)
   }
 
-  useEffect(() => { load() }, [token])
+  useEffect(() => { load() }, [])
 
   const revenueColumns: DataTableColumn<RevenueReportRow>[] = [
     { key: 'label', label: 'Kỳ' },

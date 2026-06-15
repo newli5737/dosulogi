@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Modal } from '@/shared/ui/Modal/Modal'
 import { Button } from '@/shared/ui/Button/Button'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
 import type { Shipment, ShipmentEvent } from '@/entities/shipment/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface ShipmentDetailModalProps {
   open: boolean
@@ -13,19 +12,18 @@ interface ShipmentDetailModalProps {
 }
 
 export function ShipmentDetailModal({ open, shipmentId, onClose, onSynced }: ShipmentDetailModalProps) {
-  const token = useToken()
   const [shipment, setShipment] = useState<Shipment | null>(null)
   const [events, setEvents] = useState<ShipmentEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
-  const load = async () => {
-    if (!token || !shipmentId) return
+  const load = useCallback(async () => {
+    if (!shipmentId) return
     setLoading(true)
     try {
       const [s, ev] = await Promise.all([
-        shipmentApi.get(token, shipmentId),
-        shipmentApi.events(token, shipmentId),
+        shipmentApi.get(shipmentId),
+        shipmentApi.events(shipmentId),
       ])
       setShipment(s)
       setEvents(Array.isArray(ev) ? ev : [])
@@ -34,17 +32,17 @@ export function ShipmentDetailModal({ open, shipmentId, onClose, onSynced }: Shi
     } finally {
       setLoading(false)
     }
-  }
+  }, [shipmentId])
 
   useEffect(() => {
     if (open && shipmentId) void load()
-  }, [open, shipmentId, token])
+  }, [open, shipmentId, load])
 
   async function sync() {
-    if (!token || !shipmentId) return
+    if (!shipmentId) return
     setSyncing(true)
     try {
-      await shipmentApi.sync(token, shipmentId)
+      await shipmentApi.sync(shipmentId)
       await load()
       onSynced?.()
     } catch (e) {

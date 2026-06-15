@@ -6,7 +6,6 @@ import { interactionApi } from '@/entities/interaction/api/interactionApi'
 import type { CustomerDetail } from '@/entities/customer/model/types'
 import type { Contact } from '@/entities/contact/model/types'
 import type { Interaction } from '@/entities/interaction/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 import { Button } from '@/shared/ui/Button/Button'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
@@ -17,7 +16,6 @@ import './customer-detail.css'
 
 export function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const token = useToken()
   const [customer, setCustomer] = useState<CustomerDetail | null>(null)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [interactions, setInteractions] = useState<Interaction[]>([])
@@ -28,23 +26,23 @@ export function CustomerDetailPage() {
   const [interactionOpen, setInteractionOpen] = useState(false)
 
   const loadCustomer = useCallback(async () => {
-    if (!token || !id) return
-    const res = await customerApi.get(token, id)
+    if (!id) return
+    const res = await customerApi.get(id)
     setCustomer(res.data)
-  }, [token, id])
+  }, [id])
 
   const loadContacts = useCallback(async () => {
-    if (!token || !id) return
-    const res = await contactApi.list(token, id)
+    if (!id) return
+    const res = await contactApi.list(id)
     setContacts(Array.isArray(res.data) ? res.data : [])
-  }, [token, id])
+  }, [id])
 
   const loadInteractions = useCallback(async () => {
-    if (!token || !id) return
-    const res = await interactionApi.list(token, id, intPage, 10)
+    if (!id) return
+    const res = await interactionApi.list(id, intPage, 10)
     setInteractions(Array.isArray(res.data) ? res.data : [])
     setIntMeta(parseMeta(res, intPage, 10))
-  }, [token, id, intPage])
+  }, [id, intPage])
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -60,8 +58,8 @@ export function CustomerDetailPage() {
   useEffect(() => { void reload() }, [reload])
 
   async function deleteContact(contactId: string) {
-    if (!token || !id || !window.confirm('Xóa liên hệ này?')) return
-    await contactApi.remove(token, id, contactId)
+    if (!id || !window.confirm('Xóa liên hệ này?')) return
+    await contactApi.remove(id, contactId)
     void reload()
   }
 

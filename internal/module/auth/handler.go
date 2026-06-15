@@ -5,17 +5,22 @@ import (
 	"net/http"
 
 	"github.com/dosu-logi/logistics-erp/internal/middleware"
+	"github.com/dosu-logi/logistics-erp/internal/platform/cookie"
 	"github.com/dosu-logi/logistics-erp/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type Handler struct {
-	svc *Service
+	svc        *Service
+	cookieCfg  cookie.AuthConfig
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, cookieDomain string) *Handler {
+	return &Handler{
+		svc:       svc,
+		cookieCfg: cookie.AuthConfig{Domain: cookieDomain},
+	}
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -24,7 +29,7 @@ func (h *Handler) Login(c *gin.Context) {
 		util.BadRequest(c, err.Error())
 		return
 	}
-	resp, refresh, err := h.svc.Login(c.Request.Context(), req)
+	resp, access, refresh, refreshTTL, err := h.svc.Login(c.Request.Context(), req)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCred) {
 			util.Unauthorized(c, "invalid email or password")
@@ -37,34 +42,29 @@ func (h *Handler) Login(c *gin.Context) {
 		util.InternalError(c, err.Error())
 		return
 	}
-
-	secure := c.Request.TLS != nil
-	c.SetSameSite(http.SameSiteStrictMode)
-	c.SetCookie("refresh_token", refresh, 7*24*3600, "/", "", secure, true)
+	cookie.SetAuthCookies(c, h.cookieCfg, access, h.svc.AccessTTL(), refresh, refreshTTL)
 	util.JSON(c, http.StatusOK, resp)
 }
 
 func (h *Handler) Refresh(c *gin.Context) {
-	refresh, err := c.Cookie("refresh_token")
+	refresh, err := c.Cookie(cookie.RefreshToken)
 	if err != nil || refresh == "" {
 		util.Unauthorized(c, "missing refresh token")
 		return
 	}
-	resp, newRefresh, err := h.svc.Refresh(c.Request.Context(), refresh)
+	resp, access, newRefresh, refreshTTL, err := h.svc.Refresh(c.Request.Context(), refresh)
 	if err != nil {
 		util.Unauthorized(c, "invalid refresh token")
 		return
 	}
-	secure := c.Request.TLS != nil
-	c.SetSameSite(http.SameSiteStrictMode)
-	c.SetCookie("refresh_token", newRefresh, 7*24*3600, "/", "", secure, true)
+	cookie.SetAuthCookies(c, h.cookieCfg, access, h.svc.AccessTTL(), newRefresh, refreshTTL)
 	util.JSON(c, http.StatusOK, resp)
 }
 
 func (h *Handler) Logout(c *gin.Context) {
-	refresh, _ := c.Cookie("refresh_token")
+	refresh, _ := c.Cookie(cookie.RefreshToken)
 	_ = h.svc.Logout(c.Request.Context(), refresh)
-	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	cookie.ClearAuthCookies(c, h.cookieCfg)
 	util.JSON(c, http.StatusOK, gin.H{"message": "logged out"})
 }
 

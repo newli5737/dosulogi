@@ -4,7 +4,6 @@ import { Field, Input, Select } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { customerApi } from '@/entities/customer/api/customerApi'
 import type { Customer } from '@/entities/customer/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface CustomerFormState {
   name: string
@@ -29,7 +28,6 @@ interface CustomerModalProps {
 }
 
 export function CustomerModal({ open, onClose, onSaved, edit }: CustomerModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<CustomerFormState>(empty)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,13 +52,12 @@ export function CustomerModal({ open, onClose, onSaved, edit }: CustomerModalPro
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
       const body = { ...form, email: form.email || null, phone: form.phone || null }
-      if (edit?.id) await customerApi.update(token, edit.id, body)
-      else await customerApi.create(token, body)
+      if (edit?.id) await customerApi.update(edit.id, body)
+      else await customerApi.create(body)
       onSaved?.()
       onClose()
     } catch (err) {

@@ -85,7 +85,7 @@ function loadOpenGroups(): Record<string, boolean> {
 
 export function AppShell() {
   const { session, logout } = useAuth()
-  const isAdmin = session?.user.role === 'admin'
+  const isAdmin = session?.role === 'admin'
   const [collapsed, setCollapsed] = useState(loadCollapsed)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -103,6 +103,10 @@ export function AppShell() {
     localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(openGroups))
   }, [openGroups])
 
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((v) => !v)
+  }, [])
+
   const toggleGroup = useCallback((id: string) => {
     if (collapsed) setCollapsed(false)
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -115,82 +119,73 @@ export function AppShell() {
     items: g.items.filter((item) => !item.admin || isAdmin),
   })).filter((g) => g.items.length > 0)
 
-  const sidebar = (
-    <aside className={`shell-sidebar ${collapsed ? 'shell-sidebar--collapsed' : ''}`}>
-      <div className="shell-brand">
-        <img src={LOGO_SRC} alt={LOGO_ALT} className="shell-logo-img" />
-        {!collapsed && (
-          <div>
-            <strong>Dosu Logi</strong>
-            <small>ERP / CRM</small>
-          </div>
-        )}
-      </div>
-      <nav className="shell-nav">
-        {visibleGroups.map((group) => (
-          <div key={group.id} className="shell-nav-group">
-            <button
-              type="button"
-              className="shell-nav-group__toggle"
-              onClick={() => toggleGroup(group.id)}
-              title={group.label}
-            >
-              {!collapsed && <span className="shell-nav-group__label">{group.label}</span>}
-              <span className={`shell-nav-group__chevron ${openGroups[group.id] ? 'open' : ''}`}>▾</span>
-            </button>
-            {(openGroups[group.id] || collapsed) && (
-              <div className="shell-nav-group__items">
-                {group.items.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === '/'}
-                    title={item.label}
-                    className={({ isActive }) => `shell-link ${isActive ? 'active' : ''}`}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <span className="shell-icon">{item.icon}</span>
-                    {!collapsed && item.label}
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </nav>
-      {!collapsed && (
-        <button type="button" className="shell-collapse-btn" onClick={() => setCollapsed(true)} aria-label="Thu gọn sidebar">
-          « Thu gọn
-        </button>
-      )}
-    </aside>
-  )
-
   return (
     <div className={`shell ${collapsed ? 'shell--collapsed' : ''} ${mobileOpen ? 'shell--mobile-open' : ''}`}>
-      {mobileOpen && <button type="button" className="shell-backdrop" aria-label="Đóng menu" onClick={() => setMobileOpen(false)} />}
-      {sidebar}
+      {mobileOpen && (
+        <button type="button" className="shell-backdrop" aria-label="Đóng menu" onClick={() => setMobileOpen(false)} />
+      )}
+      <aside className={`shell-sidebar ${collapsed ? 'shell-sidebar--collapsed' : ''}`}>
+        <button
+          type="button"
+          className="shell-sidebar-toggle"
+          onClick={() => {
+            if (window.innerWidth <= 900) setMobileOpen((v) => !v)
+            else toggleCollapsed()
+          }}
+          aria-label={collapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+          title={collapsed ? 'Mở rộng' : 'Thu gọn'}
+        >
+          {collapsed ? '→' : '←'}
+        </button>
+        <div className="shell-brand">
+          <img src={LOGO_SRC} alt={LOGO_ALT} className="shell-logo-img" />
+          {!collapsed && (
+            <div>
+              <strong>Dosu Logi</strong>
+              <small>ERP / CRM</small>
+            </div>
+          )}
+        </div>
+        <nav className="shell-nav">
+          {visibleGroups.map((group) => (
+            <div key={group.id} className="shell-nav-group">
+              <button
+                type="button"
+                className="shell-nav-group__toggle"
+                onClick={() => toggleGroup(group.id)}
+                title={group.label}
+              >
+                {!collapsed && <span className="shell-nav-group__label">{group.label}</span>}
+                <span className={`shell-nav-group__chevron ${openGroups[group.id] ? 'open' : ''}`}>▾</span>
+              </button>
+              {(openGroups[group.id] || collapsed) && (
+                <div className="shell-nav-group__items">
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.to === '/'}
+                      title={item.label}
+                      className={({ isActive }) => `shell-link ${isActive ? 'active' : ''}`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <span className="shell-icon">{item.icon}</span>
+                      {!collapsed && item.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+      </aside>
       <div className="shell-main">
         <header className="shell-topbar">
-          <div className="shell-topbar__left">
-            <button
-              type="button"
-              className="shell-menu-btn"
-              onClick={() => {
-                if (window.innerWidth <= 900) setMobileOpen((v) => !v)
-                else setCollapsed((v) => !v)
-              }}
-              aria-label="Toggle menu"
-            >
-              ☰
-            </button>
-            <img src={LOGO_SRC} alt={LOGO_ALT} className="shell-topbar-logo" />
-            <span className="shell-topbar-title">Dosu Logi ERP</span>
-          </div>
+          <div />
           <div className="shell-user">
-            <NavLink to="/profile" className="shell-profile">{session.user.full_name}</NavLink>
-            <small>{session.user.role}</small>
-            <button type="button" className="shell-logout" onClick={logout}>Đăng xuất</button>
+            <NavLink to="/profile" className="shell-profile">{session.full_name}</NavLink>
+            <small>{session.role}</small>
+            <button type="button" className="shell-logout" onClick={() => void logout()}>Đăng xuất</button>
           </div>
         </header>
         <main className="shell-content"><Outlet /></main>

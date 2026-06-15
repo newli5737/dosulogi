@@ -45,8 +45,8 @@ func Setup(deps Deps) *gin.Engine {
 	trackClient := tracking3p.NewClient(deps.Config.TrackingAPIBaseURL, deps.Config.TrackingAPIKey)
 
 	authRepo := auth.NewRepository(deps.DB)
-	authSvc := auth.NewService(authRepo, deps.JWT)
-	authH := auth.NewHandler(authSvc)
+	authSvc := auth.NewService(authRepo, deps.JWT, deps.Config.JWTAdminRefreshTTL)
+	authH := auth.NewHandler(authSvc, deps.Config.CookieDomain)
 
 	custRepo := crmrepo.NewCustomerRepo(deps.DB)
 	contactRepo := crmrepo.NewContactRepo(deps.DB)

@@ -2,14 +2,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { contractApi } from '@/entities/contract/api/contractApi'
 import type { Contract } from '@/entities/contract/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { ContractModal } from '@/features/contract-modal/ui/ContractModal'
 
 export function ContractTable() {
-  const token = useToken()
   const [modal, setModal] = useState<Contract | Record<string, never> | null>(null)
 
   const columns = useMemo<DataTableColumn<Contract>[]>(() => [
@@ -22,8 +20,8 @@ export function ContractTable() {
   ], [])
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => contractApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => contractApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Contract>(fetchPage)
 

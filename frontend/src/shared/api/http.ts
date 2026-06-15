@@ -3,10 +3,24 @@ import { getErrorMessage } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
-export async function http<T>(path: string, options: HttpOptions = {}): Promise<T> {
-  const { token, method = 'GET', body } = options
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) headers.Authorization = `Bearer ${token}`
+let refreshPromise: Promise<boolean> | null = null
+
+async function tryRefresh(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/api/v1/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function request(path: string, options: HttpOptions = {}, retried = false): Promise<Response> {
+  const { method = 'GET', body } = options
+  const headers: Record<string, string> = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
 
   const res = await fetch(`${BASE}${path}`, {
     method: method as HttpMethod,
@@ -14,6 +28,20 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
     credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
+
+  if (res.status === 401 && !retried && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
+    if (!refreshPromise) {
+      refreshPromise = tryRefresh().finally(() => { refreshPromise = null })
+    }
+    if (await refreshPromise) {
+      return request(path, options, true)
+    }
+  }
+  return res
+}
+
+export async function http<T>(path: string, options: HttpOptions = {}): Promise<T> {
+  const res = await request(path, options)
 
   if (res.status === 204) return undefined as T
 
@@ -25,19 +53,15 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
   return json as T
 }
 
-export async function httpBlob(path: string, token: string): Promise<Blob> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    credentials: 'include',
-  })
+export async function httpBlob(path: string): Promise<Blob> {
+  const res = await request(path)
   if (!res.ok) throw new Error(res.statusText)
   return res.blob()
 }
 
-export async function httpForm<T>(path: string, token: string, formData: FormData, method: HttpMethod = 'POST'): Promise<T> {
+export async function httpForm<T>(path: string, formData: FormData, method: HttpMethod = 'POST'): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${token}` },
     credentials: 'include',
     body: formData,
   })

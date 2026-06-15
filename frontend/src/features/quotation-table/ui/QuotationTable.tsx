@@ -2,19 +2,17 @@ import { useCallback, useMemo, useState } from 'react'
 import { quotationApi } from '@/entities/quotation/api/quotationApi'
 import type { Quotation } from '@/entities/quotation/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { QuotationModal } from '@/features/quotation-modal/ui/QuotationModal'
 
 export function QuotationTable() {
-  const token = useToken()
   const [modal, setModal] = useState<Quotation | Record<string, never> | null>(null)
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => quotationApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => quotationApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Quotation>(fetchPage)
 
@@ -27,16 +25,16 @@ export function QuotationTable() {
       key: '_actions', label: '', render: (r) => (
         <div className="row-actions">
           <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button>
-          {r.status === 'draft' && token && (
-            <Button variant="secondary" onClick={async () => { await quotationApi.send(token, r.id); reload() }}>Gửi</Button>
+          {r.status === 'draft' && (
+            <Button variant="secondary" onClick={async () => { await quotationApi.send(r.id); reload() }}>Gửi</Button>
           )}
-          {r.status === 'sent' && token && (
-            <Button variant="primary" onClick={async () => { await quotationApi.convert(token, r.id); reload() }}>→ HĐ</Button>
+          {r.status === 'sent' && (
+            <Button variant="primary" onClick={async () => { await quotationApi.convert(r.id); reload() }}>→ HĐ</Button>
           )}
         </div>
       ),
     },
-  ], [token, reload])
+  ], [reload])
 
   return (
     <>

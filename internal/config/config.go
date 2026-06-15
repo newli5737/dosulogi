@@ -26,6 +26,9 @@ type Config struct {
 	JWTRefreshSecret string
 	JWTAccessTTL     time.Duration
 	JWTRefreshTTL    time.Duration
+	JWTAdminRefreshTTL time.Duration
+
+	CookieDomain string
 
 	SePayWebhookSecret string
 
@@ -46,6 +49,7 @@ func Load() (*Config, error) {
 
 	accessMin, _ := strconv.Atoi(getEnv("JWT_ACCESS_TTL_MIN", "15"))
 	refreshDay, _ := strconv.Atoi(getEnv("JWT_REFRESH_TTL_DAY", "7"))
+	adminRefreshDay, _ := strconv.Atoi(getEnv("JWT_ADMIN_REFRESH_TTL_DAY", "14"))
 	pollSec, _ := strconv.Atoi(getEnv("TRACKING_POLL_INTERVAL_SEC", "300"))
 
 	return &Config{
@@ -61,10 +65,13 @@ func Load() (*Config, error) {
 		RedisAddr:     getEnv("REDIS_ADDR", "127.0.0.1:6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 
-		JWTAccessSecret:  getEnv("JWT_ACCESS_SECRET", "dev-access-secret-change-in-production"),
-		JWTRefreshSecret: getEnv("JWT_REFRESH_SECRET", "dev-refresh-secret-change-in-production"),
+		JWTAccessSecret:  getEnv("JWT_ACCESS_SECRET", "dev-access-secret-change-in-production-min-32-chars"),
+		JWTRefreshSecret: getEnv("JWT_REFRESH_SECRET", "dev-refresh-secret-change-in-production-min-32-chars"),
 		JWTAccessTTL:     time.Duration(accessMin) * time.Minute,
 		JWTRefreshTTL:    time.Duration(refreshDay) * 24 * time.Hour,
+		JWTAdminRefreshTTL: time.Duration(adminRefreshDay) * 24 * time.Hour,
+
+		CookieDomain: getEnv("COOKIE_DOMAIN", ""),
 
 		SePayWebhookSecret: getEnv("SEPAY_WEBHOOK_SECRET", "dev-sepay-secret"),
 

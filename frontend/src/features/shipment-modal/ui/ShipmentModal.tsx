@@ -4,7 +4,6 @@ import { Field, Input } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface ShipmentFormState {
   tracking_code: string
@@ -22,7 +21,6 @@ interface ShipmentModalProps {
 }
 
 export function ShipmentModal({ open, onClose, onSaved }: ShipmentModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<ShipmentFormState>(empty)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,11 +34,10 @@ export function ShipmentModal({ open, onClose, onSaved }: ShipmentModalProps) {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
-      await shipmentApi.create(token, {
+      await shipmentApi.create({
         tracking_code: form.tracking_code,
         customer_id: form.customer_id || null,
         origin: form.origin || null,

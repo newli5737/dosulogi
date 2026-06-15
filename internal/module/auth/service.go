@@ -9,91 +9,101 @@ import (
 )
 
 type Service struct {
-	repo   *Repository
-	jwtMgr *util.JWTManager
+	repo            *Repository
+	jwtMgr          *util.JWTManager
+	adminRefreshTTL time.Duration
 }
 
-func NewService(repo *Repository, jwtMgr *util.JWTManager) *Service {
-	return &Service{repo: repo, jwtMgr: jwtMgr}
+func NewService(repo *Repository, jwtMgr *util.JWTManager, adminRefreshTTL time.Duration) *Service {
+	return &Service{repo: repo, jwtMgr: jwtMgr, adminRefreshTTL: adminRefreshTTL}
 }
 
-func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, string, error) {
+func (s *Service) AccessTTL() time.Duration {
+	return s.jwtMgr.AccessTTL()
+}
+
+func (s *Service) refreshTTL(role string) time.Duration {
+	if role == "admin" {
+		return s.adminRefreshTTL
+	}
+	return s.jwtMgr.RefreshTTL()
+}
+
+func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, string, string, time.Duration, error) {
 	u, err := s.repo.FindByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, "", ErrInvalidCred
+		return nil, "", "", 0, ErrInvalidCred
 	}
 	if !u.IsActive {
-		return nil, "", ErrInactive
+		return nil, "", "", 0, ErrInactive
 	}
 	if !util.VerifyPassword(u.Password, req.Password) {
-		return nil, "", ErrInvalidCred
+		return nil, "", "", 0, ErrInvalidCred
 	}
 
 	access, err := s.jwtMgr.SignAccess(u.ID.String(), u.Role)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
-	refresh, err := s.jwtMgr.SignRefresh(u.ID.String())
+	ttl := s.refreshTTL(u.Role)
+	refresh, err := s.jwtMgr.SignRefreshWithTTL(u.ID.String(), ttl)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
 
 	hash := util.HashToken(refresh)
-	expires := time.Now().Add(s.jwtMgr.RefreshTTL())
-	if err := s.repo.SaveRefreshToken(ctx, u.ID, hash, expires); err != nil {
-		return nil, "", err
+	if err := s.repo.SaveRefreshToken(ctx, u.ID, hash, time.Now().Add(ttl)); err != nil {
+		return nil, "", "", 0, err
 	}
 
 	return &LoginResponse{
-		AccessToken: access,
 		User: UserBrief{
 			ID: u.ID, Email: u.Email, FullName: u.FullName, Role: u.Role,
 		},
-	}, refresh, nil
+	}, access, refresh, ttl, nil
 }
 
-func (s *Service) Refresh(ctx context.Context, refreshToken string) (*LoginResponse, string, error) {
+func (s *Service) Refresh(ctx context.Context, refreshToken string) (*LoginResponse, string, string, time.Duration, error) {
 	claims, err := s.jwtMgr.ParseRefresh(refreshToken)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
 	hash := util.HashToken(refreshToken)
 	rt, err := s.repo.FindRefreshToken(ctx, hash)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
 
 	userID, _ := uuid.Parse(claims.UserID)
 	u, err := s.repo.FindByID(ctx, userID)
 	if err != nil || !u.IsActive {
-		return nil, "", ErrInvalidCred
+		return nil, "", "", 0, ErrInvalidCred
 	}
 	_ = rt
 
 	if err := s.repo.RevokeRefreshToken(ctx, hash); err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
 
 	access, err := s.jwtMgr.SignAccess(u.ID.String(), u.Role)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
-	newRefresh, err := s.jwtMgr.SignRefresh(u.ID.String())
+	ttl := s.refreshTTL(u.Role)
+	newRefresh, err := s.jwtMgr.SignRefreshWithTTL(u.ID.String(), ttl)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
 	newHash := util.HashToken(newRefresh)
-	expires := time.Now().Add(s.jwtMgr.RefreshTTL())
-	if err := s.repo.SaveRefreshToken(ctx, u.ID, newHash, expires); err != nil {
-		return nil, "", err
+	if err := s.repo.SaveRefreshToken(ctx, u.ID, newHash, time.Now().Add(ttl)); err != nil {
+		return nil, "", "", 0, err
 	}
 
 	return &LoginResponse{
-		AccessToken: access,
 		User: UserBrief{
 			ID: u.ID, Email: u.Email, FullName: u.FullName, Role: u.Role,
 		},
-	}, newRefresh, nil
+	}, access, newRefresh, ttl, nil
 }
 
 func (s *Service) Logout(ctx context.Context, refreshToken string) error {

@@ -4,7 +4,6 @@ import { Field, Input, Select } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { userApi } from '@/entities/user/api/userApi'
 import type { User } from '@/entities/user/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface UserFormState {
   email: string
@@ -24,7 +23,6 @@ interface UserModalProps {
 }
 
 export function UserModal({ open, onClose, onSaved, edit }: UserModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<UserFormState>(empty)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -49,18 +47,17 @@ export function UserModal({ open, onClose, onSaved, edit }: UserModalProps) {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
       if (edit?.id) {
-        await userApi.update(token, edit.id, {
+        await userApi.update(edit.id, {
           full_name: form.full_name,
           role: form.role,
           is_active: form.is_active,
         })
       } else {
-        await userApi.create(token, {
+        await userApi.create({
           email: form.email,
           password: form.password,
           full_name: form.full_name,

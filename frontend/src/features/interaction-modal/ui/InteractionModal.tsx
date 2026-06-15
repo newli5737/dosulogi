@@ -4,7 +4,6 @@ import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { interactionApi } from '@/entities/interaction/api/interactionApi'
 import type { InteractionInput } from '@/entities/interaction/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 const empty: InteractionInput = { channel: 'call', direction: 'outbound', summary: '', occurred_at: '' }
 
@@ -16,7 +15,6 @@ interface InteractionModalProps {
 }
 
 export function InteractionModal({ open, customerId, onClose, onSaved }: InteractionModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<InteractionInput>(empty)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -27,11 +25,10 @@ export function InteractionModal({ open, customerId, onClose, onSaved }: Interac
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
-      await interactionApi.create(token, customerId, {
+      await interactionApi.create(customerId, {
         ...form,
         occurred_at: form.occurred_at || null,
       })

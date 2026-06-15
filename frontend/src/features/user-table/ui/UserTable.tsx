@@ -2,22 +2,21 @@ import { useCallback, useMemo, useState } from 'react'
 import { userApi } from '@/entities/user/api/userApi'
 import type { User } from '@/entities/user/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useAuth, useToken } from '@/app/providers/AuthProvider'
+import { useAuth } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { UserModal } from '@/features/user-modal/ui/UserModal'
 
 export function UserTable() {
-  const token = useToken()
   const { session } = useAuth()
   const [modal, setModal] = useState<User | 'new' | null>(null)
 
-  const isAdmin = session?.user?.role === 'admin'
+  const isAdmin = session?.role === 'admin'
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => userApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => userApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<User>(fetchPage, { enabled: isAdmin })
 
@@ -30,10 +29,10 @@ export function UserTable() {
       key: '_actions', label: '', render: (r) => (
         <div className="row-actions">
           <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button>
-          {r.is_active && token && (
+          {r.is_active && (
             <Button variant="secondary" onClick={async () => {
               if (window.confirm(`Vô hiệu hóa ${r.email}?`)) {
-                await userApi.deactivate(token, r.id)
+                await userApi.deactivate(r.id)
                 reload()
               }
             }}>Vô hiệu</Button>
@@ -41,7 +40,7 @@ export function UserTable() {
         </div>
       ),
     },
-  ], [token, reload])
+  ], [reload])
 
   if (!isAdmin) return <div className="page-card"><p>Chỉ admin mới truy cập được.</p></div>
 

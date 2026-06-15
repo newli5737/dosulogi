@@ -2,14 +2,13 @@ import { useCallback, useMemo, useState } from 'react'
 import { invoiceApi } from '@/entities/invoice/api/invoiceApi'
 import type { Invoice } from '@/entities/invoice/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { InvoiceModal } from '@/features/invoice-modal/ui/InvoiceModal'
 
-async function downloadInvoicePdf(token: string, invoice: Invoice) {
-  const blob = await invoiceApi.download(token, invoice.id)
+async function downloadInvoicePdf(invoice: Invoice) {
+  const blob = await invoiceApi.download(invoice.id)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -19,12 +18,11 @@ async function downloadInvoicePdf(token: string, invoice: Invoice) {
 }
 
 export function InvoiceTable() {
-  const token = useToken()
   const [modal, setModal] = useState<Invoice | Record<string, never> | null>(null)
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => invoiceApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => invoiceApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Invoice>(fetchPage)
 
@@ -37,19 +35,19 @@ export function InvoiceTable() {
       key: '_actions', label: '', render: (r) => (
         <div className="row-actions">
           <Button variant="secondary" onClick={() => setModal(r)}>Sửa</Button>
-          {token && r.status === 'draft' && (
-            <Button variant="secondary" onClick={async () => { await invoiceApi.send(token, r.id); reload() }}>Gửi</Button>
+          {r.status === 'draft' && (
+            <Button variant="secondary" onClick={async () => { await invoiceApi.send(r.id); reload() }}>Gửi</Button>
           )}
-          {token && r.status !== 'cancelled' && (
-            <Button variant="secondary" onClick={() => downloadInvoicePdf(token, r)}>PDF</Button>
+          {r.status !== 'cancelled' && (
+            <Button variant="secondary" onClick={() => downloadInvoicePdf(r)}>PDF</Button>
           )}
-          {token && r.status !== 'cancelled' && r.status !== 'paid' && (
-            <Button variant="secondary" onClick={async () => { await invoiceApi.cancel(token, r.id); reload() }}>Hủy</Button>
+          {r.status !== 'cancelled' && r.status !== 'paid' && (
+            <Button variant="secondary" onClick={async () => { await invoiceApi.cancel(r.id); reload() }}>Hủy</Button>
           )}
         </div>
       ),
     },
-  ], [token, reload])
+  ], [reload])
 
   return (
     <>

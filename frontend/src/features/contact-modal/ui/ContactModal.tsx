@@ -4,7 +4,6 @@ import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { contactApi } from '@/entities/contact/api/contactApi'
 import type { Contact, ContactInput } from '@/entities/contact/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 const empty: ContactInput = { name: '', role: '', phone: '', email: '', is_primary: false, note: '' }
 
@@ -17,7 +16,6 @@ interface ContactModalProps {
 }
 
 export function ContactModal({ open, customerId, edit, onClose, onSaved }: ContactModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<ContactInput>(empty)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,12 +38,11 @@ export function ContactModal({ open, customerId, edit, onClose, onSaved }: Conta
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
-      if (edit?.id) await contactApi.update(token, customerId, edit.id, form)
-      else await contactApi.create(token, customerId, form)
+      if (edit?.id) await contactApi.update(customerId, edit.id, form)
+      else await contactApi.create(customerId, form)
       onSaved?.()
       onClose()
     } catch (err) {

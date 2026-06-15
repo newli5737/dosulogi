@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { dashboardApi, type DashboardSummary, type FunnelStage } from '@/entities/session/api/sessionApi'
-import { useToken } from '@/app/providers/AuthProvider'
 import './dashboard-page.css'
 
 interface KpiCard {
@@ -10,15 +9,13 @@ interface KpiCard {
 }
 
 export function DashboardPage() {
-  const token = useToken()
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [funnel, setFunnel] = useState<FunnelStage[]>([])
 
   useEffect(() => {
-    if (!token) return
-    dashboardApi.summary(token).then(setSummary).catch(console.error)
-    dashboardApi.funnel(token).then((d) => setFunnel(Array.isArray(d) ? d : [])).catch(console.error)
-  }, [token])
+    dashboardApi.summary().then(setSummary).catch(console.error)
+    dashboardApi.funnel().then((d) => setFunnel(Array.isArray(d) ? d : [])).catch(console.error)
+  }, [])
 
   const cards: KpiCard[] = summary ? [
     { label: 'Doanh thu', value: `${Number(summary.revenue).toLocaleString('vi-VN')} ₫`, tone: 'blue' },

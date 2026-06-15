@@ -5,7 +5,6 @@ import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
 import { invoiceApi } from '@/entities/invoice/api/invoiceApi'
 import type { Invoice } from '@/entities/invoice/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface LineItemForm {
   description: string
@@ -36,7 +35,6 @@ interface InvoiceModalProps {
 }
 
 export function InvoiceModal({ open, onClose, onSaved, edit }: InvoiceModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<InvoiceFormState>({
     customer_id: '', contract_id: '', tax_rate: 10, currency: 'VND', due_date: '', items: [{ ...emptyItem }],
   })
@@ -71,7 +69,6 @@ export function InvoiceModal({ open, onClose, onSaved, edit }: InvoiceModalProps
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
@@ -92,8 +89,8 @@ export function InvoiceModal({ open, onClose, onSaved, edit }: InvoiceModalProps
         },
         items,
       }
-      if (edit?.id) await invoiceApi.update(token, edit.id, body)
-      else await invoiceApi.create(token, body)
+      if (edit?.id) await invoiceApi.update(edit.id, body)
+      else await invoiceApi.create(body)
       onSaved?.()
       onClose()
     } catch (err) {
@@ -104,11 +101,11 @@ export function InvoiceModal({ open, onClose, onSaved, edit }: InvoiceModalProps
   }
 
   async function handleSend() {
-    if (!token || !edit?.id) return
+    if (!edit?.id) return
     setLoading(true)
     setError('')
     try {
-      await invoiceApi.send(token, edit.id)
+      await invoiceApi.send(edit.id)
       onSaved?.()
       onClose()
     } catch (err) {
@@ -119,11 +116,11 @@ export function InvoiceModal({ open, onClose, onSaved, edit }: InvoiceModalProps
   }
 
   async function handleDownload() {
-    if (!token || !edit?.id) return
+    if (!edit?.id) return
     setLoading(true)
     setError('')
     try {
-      const blob = await invoiceApi.download(token, edit.id)
+      const blob = await invoiceApi.download(edit.id)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -138,11 +135,11 @@ export function InvoiceModal({ open, onClose, onSaved, edit }: InvoiceModalProps
   }
 
   async function handleCancel() {
-    if (!token || !edit?.id) return
+    if (!edit?.id) return
     setLoading(true)
     setError('')
     try {
-      await invoiceApi.cancel(token, edit.id)
+      await invoiceApi.cancel(edit.id)
       onSaved?.()
       onClose()
     } catch (err) {

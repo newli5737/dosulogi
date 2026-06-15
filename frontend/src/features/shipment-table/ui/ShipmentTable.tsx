@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
 import type { Shipment } from '@/entities/shipment/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
@@ -10,7 +9,6 @@ import { ShipmentModal } from '@/features/shipment-modal/ui/ShipmentModal'
 import { ShipmentDetailModal } from '@/features/shipment-detail-modal/ui/ShipmentDetailModal'
 
 export function ShipmentTable() {
-  const token = useToken()
   const [open, setOpen] = useState(false)
   const [detailId, setDetailId] = useState<string | null>(null)
 
@@ -28,8 +26,8 @@ export function ShipmentTable() {
   ], [])
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => shipmentApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => shipmentApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Shipment>(fetchPage)
 

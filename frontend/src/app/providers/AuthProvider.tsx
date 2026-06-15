@@ -2,30 +2,23 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { authApi } from '@/entities/session/api/sessionApi'
 import type { UserBrief } from '@/shared/api/types'
 
-export interface Session {
-  user: UserBrief
-  token: string
-}
-
 interface AuthContextValue {
-  session: Session | null
+  session: UserBrief | null
   checking: boolean
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<UserBrief | null>(null)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) { setChecking(false); return }
-    authApi.me(token)
-      .then((user) => setSession({ user, token }))
-      .catch(() => localStorage.removeItem('access_token'))
+    authApi.me()
+      .then((user) => setSession(user))
+      .catch(() => setSession(null))
       .finally(() => setChecking(false))
   }, [])
 
@@ -34,11 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checking,
     login: async (email: string, password: string) => {
       const res = await authApi.login({ email, password })
-      localStorage.setItem('access_token', res.access_token)
-      setSession({ user: res.user, token: res.access_token })
+      setSession(res.user)
     },
-    logout: () => {
-      localStorage.removeItem('access_token')
+    logout: async () => {
+      try { await authApi.logout() } catch { /* ignore */ }
       setSession(null)
     },
   }), [session, checking])
@@ -52,6 +44,7 @@ export function useAuth(): AuthContextValue {
   return ctx
 }
 
-export function useToken(): string | undefined {
-  return useAuth().session?.token
+/** @deprecated Auth uses httpOnly cookies — use useAuth().session instead */
+export function useToken(): undefined {
+  return undefined
 }

@@ -5,7 +5,6 @@ import { Button } from '@/shared/ui/Button/Button'
 import { paymentApi } from '@/entities/payment/api/paymentApi'
 import { invoiceApi } from '@/entities/invoice/api/invoiceApi'
 import type { Invoice } from '@/entities/invoice/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface PaymentFormState {
   invoice_id: string
@@ -24,28 +23,26 @@ interface PaymentModalProps {
 }
 
 export function PaymentModal({ open, onClose, onSaved }: PaymentModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<PaymentFormState>(empty)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!open || !token) return
+    if (!open) return
     setForm(empty)
-    invoiceApi.list(token, 1, 100).then((res) => setInvoices(res.data || [])).catch(() => setInvoices([]))
-  }, [open, token])
+    invoiceApi.list(1, 100).then((res) => setInvoices(res.data || [])).catch(() => setInvoices([]))
+  }, [open])
 
   const set = <K extends keyof PaymentFormState>(k: K, v: PaymentFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
-      await paymentApi.create(token, {
+      await paymentApi.create({
         invoice_id: form.invoice_id,
         amount: Number(form.amount) || 0,
         method: form.method || null,

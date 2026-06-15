@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import { ticketApi } from '@/entities/ticket/api/ticketApi'
 import type { Ticket } from '@/entities/ticket/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
@@ -19,13 +18,12 @@ const columns: DataTableColumn<Ticket>[] = [
 ]
 
 export function TicketTable() {
-  const token = useToken()
   const [open, setOpen] = useState(false)
   const [detailId, setDetailId] = useState<string | null>(null)
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => ticketApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => ticketApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Ticket>(fetchPage)
 

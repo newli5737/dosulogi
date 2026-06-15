@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { customerApi } from '@/entities/customer/api/customerApi'
 import type { Customer } from '@/entities/customer/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
@@ -12,7 +11,6 @@ import { CustomerModal } from '@/features/customer-modal/ui/CustomerModal'
 type CustomerFilters = { q: string }
 
 export function CustomerTable() {
-  const token = useToken()
   const [q, setQ] = useState('')
   const [modal, setModal] = useState<Customer | Record<string, never> | null>(null)
 
@@ -34,8 +32,8 @@ export function CustomerTable() {
   ], [])
 
   const fetchPage = useCallback(
-    (page: number, limit: number, filters: CustomerFilters) => customerApi.list(token!, page, limit, filters),
-    [token],
+    (page: number, limit: number, filters: CustomerFilters) => customerApi.list(page, limit, filters),
+    [],
   )
 
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Customer, CustomerFilters>(

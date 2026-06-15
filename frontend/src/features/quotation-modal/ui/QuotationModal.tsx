@@ -5,7 +5,6 @@ import { Button } from '@/shared/ui/Button/Button'
 import { CustomerSelect } from '@/shared/ui/CustomerSelect/CustomerSelect'
 import { quotationApi } from '@/entities/quotation/api/quotationApi'
 import type { Quotation } from '@/entities/quotation/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface LineItemForm {
   description: string
@@ -38,7 +37,6 @@ interface QuotationModalProps {
 }
 
 export function QuotationModal({ open, onClose, onSaved, edit }: QuotationModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<QuotationFormState>({
     customer_id: '', opportunity_id: '', items: [{ ...emptyItem }], currency: 'VND', valid_until: '', discount: 0, tax_rate: 10, note: '',
   })
@@ -80,7 +78,6 @@ export function QuotationModal({ open, onClose, onSaved, edit }: QuotationModalP
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
@@ -101,8 +98,8 @@ export function QuotationModal({ open, onClose, onSaved, edit }: QuotationModalP
         tax_rate: taxRate || null,
         note: form.note || null,
       }
-      if (edit?.id) await quotationApi.update(token, edit.id, body)
-      else await quotationApi.create(token, body)
+      if (edit?.id) await quotationApi.update(edit.id, body)
+      else await quotationApi.create(body)
       onSaved?.()
       onClose()
     } catch (err) {

@@ -1,10 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Modal } from '@/shared/ui/Modal/Modal'
-import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
+import { Field, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { ticketApi } from '@/entities/ticket/api/ticketApi'
 import type { Ticket, TicketComment } from '@/entities/ticket/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface TicketDetailModalProps {
   open: boolean
@@ -14,7 +13,6 @@ interface TicketDetailModalProps {
 }
 
 export function TicketDetailModal({ open, ticketId, onClose, onSaved }: TicketDetailModalProps) {
-  const token = useToken()
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [comments, setComments] = useState<TicketComment[]>([])
   const [status, setStatus] = useState('open')
@@ -25,9 +23,9 @@ export function TicketDetailModal({ open, ticketId, onClose, onSaved }: TicketDe
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!open || !token || !ticketId) return
+    if (!open || !ticketId) return
     setLoading(true)
-    ticketApi.get(token, ticketId)
+    ticketApi.get(ticketId)
       .then((res) => {
         setTicket(res.data.ticket)
         setComments(Array.isArray(res.data.comments) ? res.data.comments : [])
@@ -36,15 +34,15 @@ export function TicketDetailModal({ open, ticketId, onClose, onSaved }: TicketDe
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error'))
       .finally(() => setLoading(false))
-  }, [open, token, ticketId])
+  }, [open, ticketId])
 
   async function saveTicket(e: FormEvent) {
     e.preventDefault()
-    if (!token || !ticketId) return
+    if (!ticketId) return
     setLoading(true)
     setError('')
     try {
-      await ticketApi.update(token, ticketId, { status, priority })
+      await ticketApi.update(ticketId, { status, priority })
       onSaved?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -55,10 +53,10 @@ export function TicketDetailModal({ open, ticketId, onClose, onSaved }: TicketDe
 
   async function postComment(e: FormEvent) {
     e.preventDefault()
-    if (!token || !ticketId || !commentBody.trim()) return
+    if (!ticketId || !commentBody.trim()) return
     setLoading(true)
     try {
-      const res = await ticketApi.addComment(token, ticketId, { body: commentBody, is_internal: isInternal })
+      const res = await ticketApi.addComment(ticketId, { body: commentBody, is_internal: isInternal })
       setComments((c) => [...c, res.data])
       setCommentBody('')
     } catch (err) {

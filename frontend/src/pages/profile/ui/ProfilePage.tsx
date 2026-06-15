@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { authApi } from '@/entities/session/api/sessionApi'
-import { useToken } from '@/app/providers/AuthProvider'
 import { Field, Input } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 
 export function ProfilePage() {
-  const token = useToken()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -15,7 +13,6 @@ export function ProfilePage() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     if (next !== confirm) {
       setError('Mật khẩu xác nhận không khớp')
       return
@@ -28,7 +25,7 @@ export function ProfilePage() {
     setError('')
     setMessage('')
     try {
-      await authApi.changePassword(token, { old_password: current, new_password: next })
+      await authApi.changePassword({ old_password: current, new_password: next })
       setMessage('Đã đổi mật khẩu thành công')
       setCurrent('')
       setNext('')

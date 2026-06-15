@@ -4,7 +4,6 @@ import L, { type LatLngTuple } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
 import type { MapPoint } from '@/entities/shipment/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 import './shipment-map.css'
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -17,13 +16,11 @@ L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, 
 const DEFAULT_CENTER: LatLngTuple = [16.0544, 108.2022]
 
 export function ShipmentMapPage() {
-  const token = useToken()
   const [points, setPoints] = useState<MapPoint[]>([])
 
   useEffect(() => {
-    if (!token) return
-    shipmentApi.map(token).then((d) => setPoints(Array.isArray(d) ? d : [])).catch(console.error)
-  }, [token])
+    shipmentApi.map().then((d) => setPoints(Array.isArray(d) ? d : [])).catch(console.error)
+  }, [])
 
   const center: LatLngTuple = points[0] ? [points[0].lat, points[0].lng] : DEFAULT_CENTER
 

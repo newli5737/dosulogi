@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Modal } from '@/shared/ui/Modal/Modal'
 import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
@@ -7,7 +7,6 @@ import { opportunityApi } from '@/entities/opportunity/api/opportunityApi'
 import { shipmentApi } from '@/entities/shipment/api/shipmentApi'
 import type { Opportunity, StageHistoryEntry } from '@/entities/opportunity/model/types'
 import type { Shipment } from '@/entities/shipment/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface OpportunityFormState {
   customer_id: string
@@ -33,7 +32,6 @@ interface OpportunityModalProps {
 }
 
 export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<OpportunityFormState>(empty)
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [history, setHistory] = useState<StageHistoryEntry[]>([])
@@ -41,14 +39,14 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!open || !token) return
-    shipmentApi.list(token, 1, 100).then((r) => setShipments(Array.isArray(r.data) ? r.data : [])).catch(console.error)
-  }, [open, token])
+    if (!open) return
+    shipmentApi.list(1, 100).then((r) => setShipments(Array.isArray(r.data) ? r.data : [])).catch(console.error)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
-    if (edit?.id && token) {
-      opportunityApi.get(token, edit.id).then((res) => {
+    if (edit?.id) {
+      opportunityApi.get(edit.id).then((res) => {
         const o = res.data
         setForm({
           customer_id: o.customer_id || '',
@@ -62,12 +60,12 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
           shipment_ids: o.shipment_ids || [],
         })
       }).catch(console.error)
-      opportunityApi.stageHistory(token, edit.id).then((r) => setHistory(Array.isArray(r.data) ? r.data : [])).catch(console.error)
+      opportunityApi.stageHistory(edit.id).then((r) => setHistory(Array.isArray(r.data) ? r.data : [])).catch(console.error)
     } else {
       setForm(empty)
       setHistory([])
     }
-  }, [open, edit, token])
+  }, [open, edit])
 
   const set = <K extends keyof OpportunityFormState>(k: K, v: OpportunityFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
@@ -83,7 +81,6 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
@@ -98,8 +95,8 @@ export function OpportunityModal({ open, onClose, onSaved, edit }: OpportunityMo
         note: form.note || null,
         shipment_ids: form.shipment_ids,
       }
-      if (edit?.id) await opportunityApi.update(token, edit.id, body)
-      else await opportunityApi.create(token, body)
+      if (edit?.id) await opportunityApi.update(edit.id, body)
+      else await opportunityApi.create(body)
       onSaved?.()
       onClose()
     } catch (err) {

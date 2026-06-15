@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dosu-logi/logistics-erp/internal/platform/cookie"
 	"github.com/dosu-logi/logistics-erp/internal/util"
 	"github.com/gin-gonic/gin"
 )
@@ -15,13 +16,12 @@ const (
 
 func Auth(jwtMgr *util.JWTManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		header := c.GetHeader("Authorization")
-		if header == "" || !strings.HasPrefix(header, "Bearer ") {
-			util.Unauthorized(c, "missing or invalid authorization header")
+		token := cookie.AccessFromRequest(c)
+		if token == "" {
+			util.Unauthorized(c, "missing access token")
 			c.Abort()
 			return
 		}
-		token := strings.TrimPrefix(header, "Bearer ")
 		claims, err := jwtMgr.ParseAccess(token)
 		if err != nil {
 			util.Unauthorized(c, "invalid or expired token")
@@ -48,9 +48,14 @@ func GetRole(c *gin.Context) string {
 
 func OptionalAuth(jwtMgr *util.JWTManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		header := c.GetHeader("Authorization")
-		if strings.HasPrefix(header, "Bearer ") {
-			token := strings.TrimPrefix(header, "Bearer ")
+		token := cookie.AccessFromRequest(c)
+		if token == "" {
+			header := c.GetHeader("Authorization")
+			if strings.HasPrefix(header, "Bearer ") {
+				token = strings.TrimPrefix(header, "Bearer ")
+			}
+		}
+		if token != "" {
 			if claims, err := jwtMgr.ParseAccess(token); err == nil {
 				c.Set(ContextUserID, claims.UserID)
 				c.Set(ContextRole, claims.Role)

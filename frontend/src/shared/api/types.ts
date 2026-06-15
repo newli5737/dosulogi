@@ -24,7 +24,6 @@ export interface ApiErrorResponse {
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
 export interface HttpOptions {
-  token?: string
   method?: HttpMethod
   body?: unknown
 }
@@ -44,7 +43,6 @@ export interface UserBrief {
 }
 
 export interface LoginResponse {
-  access_token: string
   user: UserBrief
 }
 

@@ -2,19 +2,17 @@ import { useCallback, useMemo, useState } from 'react'
 import { paymentApi } from '@/entities/payment/api/paymentApi'
 import type { Payment } from '@/entities/payment/model/types'
 import { usePaginated } from '@/shared/hooks/usePaginated'
-import { useToken } from '@/app/providers/AuthProvider'
 import { DataTable, type DataTableColumn } from '@/shared/ui/DataTable/DataTable'
 import { Pagination } from '@/shared/ui/Pagination/Pagination'
 import { Button } from '@/shared/ui/Button/Button'
 import { PaymentModal } from '@/features/payment-modal/ui/PaymentModal'
 
 export function PaymentTable() {
-  const token = useToken()
   const [open, setOpen] = useState(false)
 
   const fetchPage = useCallback(
-    (page: number, limit: number) => paymentApi.list(token!, page, limit),
-    [token],
+    (page: number, limit: number) => paymentApi.list(page, limit),
+    [],
   )
   const { rows, meta, page, setPage, loading, reload } = usePaginated<Payment>(fetchPage)
 

@@ -4,7 +4,6 @@ import { Field, Input, Select, Textarea } from '@/shared/ui/Form/Form'
 import { Button } from '@/shared/ui/Button/Button'
 import { campaignApi } from '@/entities/campaign/api/campaignApi'
 import type { Campaign } from '@/entities/campaign/model/types'
-import { useToken } from '@/app/providers/AuthProvider'
 
 interface CampaignFormState {
   name: string
@@ -23,7 +22,6 @@ interface CampaignModalProps {
 }
 
 export function CampaignModal({ open, onClose, onSaved, edit }: CampaignModalProps) {
-  const token = useToken()
   const [form, setForm] = useState<CampaignFormState>(empty)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -47,13 +45,12 @@ export function CampaignModal({ open, onClose, onSaved, edit }: CampaignModalPro
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!token) return
     setLoading(true)
     setError('')
     try {
       const body = { ...form, subject: form.subject || null, body_html: form.body_html || null }
-      if (edit?.id) await campaignApi.update(token, edit.id, body)
-      else await campaignApi.create(token, body)
+      if (edit?.id) await campaignApi.update(edit.id, body)
+      else await campaignApi.create(body)
       onSaved?.()
       onClose()
     } catch (err) {

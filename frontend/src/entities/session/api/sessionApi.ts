@@ -1,5 +1,9 @@
 import { http } from '@/shared/api/http'
-import type { LoginResponse, UserBrief } from '@/shared/api/types'
+import type { UserBrief } from '@/shared/api/types'
+
+export interface LoginResponse {
+  user: UserBrief
+}
 
 export interface DashboardSummary {
   revenue: number
@@ -29,27 +33,31 @@ export interface ARReportRow {
 export const authApi = {
   login: (body: { email: string; password: string }): Promise<LoginResponse> =>
     http('/api/v1/auth/login', { method: 'POST', body }),
-  me: (token: string): Promise<UserBrief> =>
-    http('/api/v1/auth/me', { token }),
-  changePassword: (token: string, body: { old_password: string; new_password: string }): Promise<{ message: string }> =>
-    http('/api/v1/auth/me/password', { token, method: 'PUT', body }),
+  refresh: (): Promise<LoginResponse> =>
+    http('/api/v1/auth/refresh', { method: 'POST' }),
+  logout: (): Promise<{ message: string }> =>
+    http('/api/v1/auth/logout', { method: 'POST' }),
+  me: (): Promise<UserBrief> =>
+    http('/api/v1/auth/me'),
+  changePassword: (body: { old_password: string; new_password: string }): Promise<{ message: string }> =>
+    http('/api/v1/auth/me/password', { method: 'PUT', body }),
 }
 
 export const dashboardApi = {
-  summary: (token: string): Promise<DashboardSummary> =>
-    http('/api/v1/dashboard/summary', { token }),
-  funnel: (token: string): Promise<FunnelStage[]> =>
-    http('/api/v1/dashboard/sales-funnel', { token }),
+  summary: (): Promise<DashboardSummary> =>
+    http('/api/v1/dashboard/summary'),
+  funnel: (): Promise<FunnelStage[]> =>
+    http('/api/v1/dashboard/sales-funnel'),
 }
 
 export const reportApi = {
-  revenue: (token: string, from?: string, to?: string): Promise<RevenueReportRow[]> => {
+  revenue: (from?: string, to?: string): Promise<RevenueReportRow[]> => {
     const q = new URLSearchParams()
     if (from) q.set('from', from)
     if (to) q.set('to', to)
     const qs = q.toString()
-    return http(`/api/v1/reports/revenue${qs ? `?${qs}` : ''}`, { token })
+    return http(`/api/v1/reports/revenue${qs ? `?${qs}` : ''}`)
   },
-  ar: (token: string): Promise<ARReportRow[]> =>
-    http('/api/v1/reports/ar', { token }),
+  ar: (): Promise<ARReportRow[]> =>
+    http('/api/v1/reports/ar'),
 }

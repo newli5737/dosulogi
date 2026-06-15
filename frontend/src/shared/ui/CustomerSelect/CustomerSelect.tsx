@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { customerApi } from '@/entities/customer/api/customerApi'
-import { useToken } from '@/app/providers/AuthProvider'
 import { Select } from '../Form/Form'
 
 interface CustomerSelectProps {
@@ -10,13 +9,11 @@ interface CustomerSelectProps {
 }
 
 export function CustomerSelect({ value, onChange, required }: CustomerSelectProps) {
-  const token = useToken()
   const [customers, setCustomers] = useState<{ id: string; code: string; name: string }[]>([])
 
   useEffect(() => {
-    if (!token) return
-    void customerApi.list(token, 1, 200).then((res) => setCustomers(res.data)).catch(() => setCustomers([]))
-  }, [token])
+    void customerApi.list(1, 200).then((res) => setCustomers(res.data)).catch(() => setCustomers([]))
+  }, [])
 
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)} required={required}>
