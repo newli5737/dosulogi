@@ -1,0 +1,16 @@
+[Unit]
+Description=Dosu Logi ERP API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/dosulogi
+EnvironmentFile=/var/www/dosulogi/.env
+ExecStart=/var/www/dosulogi/server
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
