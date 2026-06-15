@@ -15,6 +15,7 @@ import (
 	"github.com/dosu-logi/logistics-erp/internal/integration/tracking3p"
 	"github.com/dosu-logi/logistics-erp/internal/module/marketing"
 	"github.com/dosu-logi/logistics-erp/internal/module/tracking"
+	"github.com/dosu-logi/logistics-erp/internal/platform/cache"
 	"github.com/dosu-logi/logistics-erp/internal/router"
 	"github.com/dosu-logi/logistics-erp/internal/util"
 )
@@ -42,12 +43,14 @@ func main() {
 	}
 
 	redisClient := db.NewRedis(cfg)
-	if err := db.PingRedis(ctx, redisClient); err != nil {
-		log.Printf("warn: redis unavailable: %v", err)
-	} else {
+	redisOK := db.PingRedis(ctx, redisClient) == nil
+	if redisOK {
 		log.Println("redis connected")
+	} else {
+		log.Printf("warn: redis unavailable — rate limit cache disabled")
 	}
 	defer redisClient.Close()
+	cacheStore := cache.New(redisClient, redisOK)
 
 	_ = os.MkdirAll(cfg.UploadDir, 0755)
 	_ = os.MkdirAll(cfg.UploadDir+"/contracts", 0755)
@@ -76,6 +79,7 @@ func main() {
 		JWT:    jwtMgr,
 		Poller: poller,
 		Sched:  scheduler,
+		Cache:  cacheStore,
 	})
 
 	srv := &http.Server{

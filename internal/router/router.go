@@ -17,6 +17,7 @@ import (
 	"github.com/dosu-logi/logistics-erp/internal/module/dashboard"
 	"github.com/dosu-logi/logistics-erp/internal/module/marketing"
 	"github.com/dosu-logi/logistics-erp/internal/module/tracking"
+	"github.com/dosu-logi/logistics-erp/internal/platform/cache"
 	"github.com/dosu-logi/logistics-erp/internal/platform/httpx"
 	"github.com/dosu-logi/logistics-erp/internal/util"
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,7 @@ type Deps struct {
 	JWT     *util.JWTManager
 	Poller  *tracking.Poller
 	Sched   *marketing.Scheduler
+	Cache   *cache.Store
 }
 
 func Setup(deps Deps) *gin.Engine {
@@ -95,6 +97,7 @@ func Setup(deps Deps) *gin.Engine {
 	// Protected routes
 	protected := api.Group("")
 	protected.Use(middleware.Auth(deps.JWT))
+	protected.Use(middleware.RateLimit(deps.Cache, 120))
 	protected.Use(middleware.RBAC())
 	protected.Use(middleware.DirectorReadOnly())
 

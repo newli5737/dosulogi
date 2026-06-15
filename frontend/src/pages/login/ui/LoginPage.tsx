@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { LOGO_ALT, LOGO_SRC } from '@/shared/config/brand'
 import './login-page.css'
 
 export function LoginPage() {
@@ -25,6 +26,7 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-hero">
+        <img src={LOGO_SRC} alt={LOGO_ALT} className="login-logo" />
         <h1>Dosu Logi</h1>
         <p>Hệ thống quản lý logistics tích hợp CRM & ERP</p>
         <ul>
@@ -35,6 +37,7 @@ export function LoginPage() {
       </div>
       <div className="login-panel">
         <form className="login-form" onSubmit={onSubmit}>
+          <img src={LOGO_SRC} alt={LOGO_ALT} className="login-form-logo" />
           <h2>Đăng nhập</h2>
           <p className="login-sub">Nhập thông tin tài khoản của bạn</p>
           <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" /></label>
